@@ -1,1 +1,3 @@
-# Plant Classifier\n\nClassify healthy vs unhealthy leaves using ML.
+# Plant Classifier
+
+Classify healthy vs unhealthy leaves using ML.
