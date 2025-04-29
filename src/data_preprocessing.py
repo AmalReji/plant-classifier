@@ -43,6 +43,6 @@ if __name__ == "__main__":
     data_path = Path("../data") / "Plants_2"
     train_loader, valid_loader, test_loader = get_dataloaders(data_path)
 
-    print(f"✅ Loaded {len(train_loader.dataset)} training images.")
-    print(f"✅ Loaded {len(valid_loader.dataset)} validation images.")
-    print(f"✅ Loaded {len(test_loader.dataset)} test images.")
+    print(f"Loaded {len(train_loader.dataset)} training images.")
+    print(f"Loaded {len(valid_loader.dataset)} validation images.")
+    print(f"Loaded {len(test_loader.dataset)} test images.")
