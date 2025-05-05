@@ -1,0 +1,5 @@
+kagglehub==0.3.12
+opencv_python==4.11.0.86
+opencv_python_headless==4.11.0.86
+torch==2.2.2
+torchvision==0.17.2
