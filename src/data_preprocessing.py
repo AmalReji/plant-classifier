@@ -1,6 +1,20 @@
 from pathlib import Path
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+import cv2
+
+
+def preprocess_images(dataset_dir: Path, img_size: int = 224):
+    images = []
+    labels = []
+    cwd = Path.cwd()
+    for label in dataset_dir.iterdir():
+        for img_path in label.iterdir():
+            # Read images
+            img = cv2.imread(str(img_path))
+
+            # Resize images
+            img = cv2.resize(img, (img_size, img_size))
 
 
 def get_dataloaders(data_dir: Path, batch_size: int = 32, img_size: int = 224):
@@ -40,9 +54,24 @@ def get_dataloaders(data_dir: Path, batch_size: int = 32, img_size: int = 224):
 
 
 if __name__ == "__main__":
-    data_path = Path("../data") / "Plants_2"
-    train_loader, valid_loader, test_loader = get_dataloaders(data_path)
+    #data_path = Path("../data") / "Plants_2"
+    #train_dir = data_path / "train"
+    #valid_dir = data_path / "valid"
+    #test_dir = data_path / "test"
+#
+    #for label in test_dir.glob("*/"):
+    #    for img_path in label.glob("*.jpg"):
+    #        # Read images
+    #        img = cv2.imread(str(img_path))
+#
+    #cv2.imshow(img_path.name, img)
 
-    print(f"Loaded {len(train_loader.dataset)} training images.")
-    print(f"Loaded {len(valid_loader.dataset)} validation images.")
-    print(f"Loaded {len(test_loader.dataset)} test images.")
+    img = cv2.imread("../data/Plants_2/test/Alstonia Scholaris diseased (P2a)/0014_0006.JPG")
+    cv2.imshow("0014_0006.JPG", img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    #train_loader, valid_loader, test_loader = get_dataloaders(data_path)
+
+    #print(f"Loaded {len(train_loader.dataset)} training images.")
+    #print(f"Loaded {len(valid_loader.dataset)} validation images.")
+    #print(f"Loaded {len(test_loader.dataset)} test images.")
