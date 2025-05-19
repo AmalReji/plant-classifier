@@ -1,4 +1,5 @@
 from pathlib import Path
+import numpy as np
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import cv2
@@ -7,14 +8,34 @@ import cv2
 def preprocess_images(dataset_dir: Path, img_size: int = 224):
     images = []
     labels = []
-    cwd = Path.cwd()
-    for label in dataset_dir.iterdir():
-        for img_path in label.iterdir():
-            # Read images
-            img = cv2.imread(str(img_path))
 
-            # Resize images
-            img = cv2.resize(img, (img_size, img_size))
+    # Create transformation to mimic ResNet50 and MobileNetV2 preprocessing
+    transform = transforms.Compose([
+        transforms.resize((img_size, img_size)),
+        transforms.ToTensor(),  # Also converts to [0, 1]
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+    ])
+
+    # Apply transformation to each image #
+
+
+    #cwd = Path.cwd()
+    #for label in dataset_dir.iterdir():
+    #    if label.is_dir():
+    #        labels.append(label.name)
+    #        for img_path in label.iterdir():
+    #            # Read images
+    #            img = cv2.imread(str(img_path), )
+
+    #            # Resize images
+    #            img = cv2.resize(img, (img_size, img_size))
+
+    #            # OPTIONAL: Change image color ordering from BGR to RGB
+    #            # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR
+
+
+
 
 
 def get_dataloaders(data_dir: Path, batch_size: int = 32, img_size: int = 224):
@@ -54,22 +75,21 @@ def get_dataloaders(data_dir: Path, batch_size: int = 32, img_size: int = 224):
 
 
 if __name__ == "__main__":
-    #data_path = Path("../data") / "Plants_2"
-    #train_dir = data_path / "train"
-    #valid_dir = data_path / "valid"
-    #test_dir = data_path / "test"
-#
+    root_dir = Path.joinpath(Path.cwd(), "..")
+    data_path = Path.joinpath(root_dir, "data", "Plants_2")
+    train_dir = Path.joinpath(data_path,"train")
+    valid_dir = Path.joinpath(data_path, "valid")
+    test_dir = Path.joinpath(data_path,"test")
+
     #for label in test_dir.glob("*/"):
     #    for img_path in label.glob("*.jpg"):
     #        # Read images
     #        img = cv2.imread(str(img_path))
-#
+
     #cv2.imshow(img_path.name, img)
 
-    img = cv2.imread("../data/Plants_2/test/Alstonia Scholaris diseased (P2a)/0014_0006.JPG")
-    cv2.imshow("0014_0006.JPG", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    preprocess_images(Path(valid_dir), img_size=224)
+
     #train_loader, valid_loader, test_loader = get_dataloaders(data_path)
 
     #print(f"Loaded {len(train_loader.dataset)} training images.")
