@@ -1,15 +1,44 @@
 from pathlib import Path
 import numpy as np
+import torch
 from torchvision import datasets, transforms
+from torchvision.models import get_weight
 from torch.utils.data import DataLoader
 import cv2
+from PIL import Image
 
 
-def preprocess_images(dataset_dir: Path, img_size: int = 224):
+def preprocess_images(dataset_dir: Path, model_name: str, img_size: int = 224):
     images = []
     labels = []
 
+    # Warning: String is case-sensitive
+    weights = get_weight(f"{model_name}_Weights.DEFAULT")  # Returns the best available weights for the model
+    preprocess = weights.transforms()  # Returns the transformations required for the chosen model
+
+    transforms_augmented = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(10),
+        transforms.RandomCrop(size=preprocess.crop_size[0], padding=4)
+    ])
+
+    for label in dataset_dir.iterdir():
+        if label.is_dir():
+            labels.append(label.name)
+            for img_path in label.iterdir():
+                # Read images
+                original_dataset = datasets.ImageFolder(Path(dataset_dir,label), transform=preprocess)
+                # Only augment enough images to reach max folder size
+                augmented_dataset = datasets.ImageFolder(Path(dataset_dir, label), transform=transforms_augmented)
+                train_dataset = torch.utils.data.ConcatDataset([original_dataset, augmented_dataset])
+                images.append(train_dataset)
+    return images, labels
+
+    # img = Image.open(img_path)
+
     # Create transformation to mimic ResNet50 and MobileNetV2 preprocessing
+
+
     transform = transforms.Compose([
         transforms.resize((img_size, img_size)),
         transforms.ToTensor(),  # Also converts to [0, 1]
@@ -88,7 +117,7 @@ if __name__ == "__main__":
 
     #cv2.imshow(img_path.name, img)
 
-    preprocess_images(Path(valid_dir), img_size=224)
+    preprocess_images(Path(valid_dir), model_name="ResNet50", img_size=224)
 
     #train_loader, valid_loader, test_loader = get_dataloaders(data_path)
 
