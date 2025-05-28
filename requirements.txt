@@ -1,5 +1,9 @@
 kagglehub==0.3.12
+numpy==2.2.6
 opencv_python==4.11.0.86
 opencv_python_headless==4.11.0.86
+Pillow==11.2.1
+scikit_learn==1.6.1
 torch==2.2.2
 torchvision==0.17.2
+xgboost==3.0.2

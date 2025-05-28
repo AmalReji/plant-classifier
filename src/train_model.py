@@ -6,7 +6,8 @@ import torch
 from torch.utils.data import DataLoader
 from data_preprocessing import preprocess_images
 from torchvision.models import get_model
-
+from xgboost import XGBClassifier
+from sklearn.metrics import classification_report
 
 def extract_features(dataloader: DataLoader, model_name: str, device: str = 'cpu') -> tuple:
     """ Extract features from images using a pre-trained model.
@@ -50,6 +51,7 @@ if __name__ == "__main__":
 
     model_name = "ResNet50"
 
+    # Preprocess images and create DataLoaders
     start_time = time.time()
     train_loader = preprocess_images(Path(train_dir), model_name=model_name)
     end_time = time.time()
@@ -65,6 +67,33 @@ if __name__ == "__main__":
     end_time = time.time()
     print(f"Loaded {len(test_loader.dataset)} test images in {end_time - start_time} secs.")
 
+    # Extract features from the datasets
+    start_time = time.time()
     train_X, train_y = extract_features(train_loader, model_name)
+    end_time = time.time()
+    print(f"Extracted features from {len(train_y)} training images in {end_time - start_time} secs.")
+
+    start_time = time.time()
     valid_X, valid_y = extract_features(valid_loader, model_name)
+    end_time = time.time()
+    print(f"Extracted features from {len(valid_y)} validation images in {end_time - start_time} secs.")
+
+    start_time = time.time()
     test_X, test_y = extract_features(test_loader, model_name)
+    end_time = time.time()
+    print(f"Extracted features from {len(test_y)} test images in {end_time - start_time} secs.")
+
+    # Train xgboost model using the extracted features
+    xgb = XGBClassifier(
+        objective='multi:softmax',
+        num_class=len(set(train_y)),  # e.g., 22 classes
+        eval_metric='mlogloss',
+        n_jobs=-1,
+        verbosity=1
+    )
+
+    xgb.fit(train_X, train_y)
+
+    # Evaluate the model on validation set
+    y_pred = xgb.predict(test_X)
+    print(classification_report(test_y, y_pred))
