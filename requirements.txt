@@ -1,5 +1,5 @@
 kagglehub==0.3.12
-numpy==2.2.6
+numpy==1.26.4
 opencv_python==4.11.0.86
 opencv_python_headless==4.11.0.86
 Pillow==11.2.1

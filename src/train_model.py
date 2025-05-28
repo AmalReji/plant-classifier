@@ -88,11 +88,14 @@ if __name__ == "__main__":
         objective='multi:softmax',
         num_class=len(set(train_y)),  # e.g., 22 classes
         eval_metric='mlogloss',
-        n_jobs=-1,
+        n_jobs=1,
         verbosity=1
     )
 
+    start_time = time.time()
     xgb.fit(train_X, train_y)
+    end_time = time.time()
+    print(f"Trained XGBoost model in {end_time - start_time} secs.")
 
     # Evaluate the model on validation set
     y_pred = xgb.predict(test_X)
