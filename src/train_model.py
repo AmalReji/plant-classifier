@@ -1,102 +1,75 @@
 import time
-from pathlib import Path
 
+import xgboost as xgb
 import numpy as np
-import torch
-from torch.utils.data import DataLoader
-from data_preprocessing import preprocess_images
-from torchvision.models import get_model
-from xgboost import XGBClassifier
+import sys
+
+from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report
 
-def extract_features(dataloader: DataLoader, model_name: str, device: str = 'cpu') -> tuple:
-    """ Extract features from images using a pre-trained model.
-    Args:
-        dataloader (DataLoader): DataLoader containing images.
-        model_name (str): Name of the pre-trained model.
-        device (str): Device to run the model on ('cpu' or 'cuda').
-    Returns:
-        tuple: Numpy arrays of extracted features and corresponding labels.
-    """
-    all_features = []
-    all_labels = []
+if __name__ == '__main__':
+    # Load pre-saved train_X.npy/train_y.npy, cast label→int32
+    train_X = np.load('train_X.npy')
+    train_y = np.load('train_y.npy')
+    valid_X = np.load('valid_X.npy')
+    valid_y = np.load('valid_y.npy')
+    test_X = np.load('test_X.npy')
+    test_y = np.load('test_y.npy')
 
-    # Use pre-trained model without final classification layer
-    model = get_model(model_name, weights='DEFAULT')  # Use 'DEFAULT' to get the best available weights
-    model = torch.nn.Sequential(*list(model.children())[:-1])  # Remove the final FC layer
-    model.eval()  # Set to inference mode
+    print(f"Training on {len(train_y)} samples with {train_X.shape[1]} features.")
+    # print(f"train_X.dtype={train_X.dtype}, train_X.shape={train_X.shape}")
+    # print(f"train_y.dtype={train_y.dtype}, train_y.shape={train_y.shape}")
 
-    model.to(device)
-
-    with torch.no_grad():
-        for images, labels in dataloader:
-            images = images.to(device)
-            features = model(images)
-            features = features.view(features.size(0), -1)  # Flatten (B, 2048, 1, 1) -> (B, 2048)
-            all_features.append(features.cpu().numpy())
-            all_labels.append(labels.cpu().numpy())
-
-    return (
-        np.concatenate(all_features, axis=0),
-        np.concatenate(all_labels, axis=0)
-    )
-
-
-if __name__ == "__main__":
-    root_dir = Path.joinpath(Path.cwd(), "..")
-    data_path = Path.joinpath(root_dir, "data", "Plants_2")
-    train_dir = Path.joinpath(data_path, "train")
-    valid_dir = Path.joinpath(data_path, "valid")
-    test_dir = Path.joinpath(data_path, "test")
-
-    model_name = "ResNet50"
-
-    # Preprocess images and create DataLoaders
-    start_time = time.time()
-    train_loader = preprocess_images(Path(train_dir), model_name=model_name)
-    end_time = time.time()
-    print(f"Loaded {len(train_loader.dataset)} training images in {end_time - start_time} secs.")
-
-    start_time = time.time()
-    valid_loader = preprocess_images(Path(valid_dir), model_name=model_name)
-    end_time = time.time()
-    print(f"Loaded {len(valid_loader.dataset)} validation images in {end_time - start_time} secs.")
-
-    start_time = time.time()
-    test_loader = preprocess_images(Path(test_dir), model_name=model_name)
-    end_time = time.time()
-    print(f"Loaded {len(test_loader.dataset)} test images in {end_time - start_time} secs.")
-
-    # Extract features from the datasets
-    start_time = time.time()
-    train_X, train_y = extract_features(train_loader, model_name)
-    end_time = time.time()
-    print(f"Extracted features from {len(train_y)} training images in {end_time - start_time} secs.")
-
-    start_time = time.time()
-    valid_X, valid_y = extract_features(valid_loader, model_name)
-    end_time = time.time()
-    print(f"Extracted features from {len(valid_y)} validation images in {end_time - start_time} secs.")
-
-    start_time = time.time()
-    test_X, test_y = extract_features(test_loader, model_name)
-    end_time = time.time()
-    print(f"Extracted features from {len(test_y)} test images in {end_time - start_time} secs.")
+    # # Reduce dimensionality using PCA
+    # print(f"Original number of features: {train_X.shape[1]}")
+    # pca = PCA(n_components=10)  # Try fewer components
+    # train_X_reduced = pca.fit_transform(train_X)
+    # print("Reduced features to", train_X_reduced.shape[1], "components.")
 
     # Train xgboost model using the extracted features
-    xgb = XGBClassifier(
+    start_time = time.time()
+    xgb_model = xgb.XGBClassifier(
         objective='multi:softmax',
         num_class=len(set(train_y)),  # e.g., 22 classes
         eval_metric='mlogloss',
         n_jobs=1,
-        verbosity=1
+        verbosity=1,
+        n_estimators=50,
+        max_depth=4
     )
 
-    start_time = time.time()
-    xgb.fit(train_X, train_y)
+    # Train the model
+    xgb_model.fit(train_X, train_y)
     end_time = time.time()
-    print(f"Trained XGBoost model in {end_time - start_time} secs.")
+    print(f"Trained XGBoost model.fit in {end_time - start_time} secs.")
+
+    start_time = time.time()
+    # Build DMatrix safely (no leftover worker processes)
+    try:
+        dtrain = xgb.DMatrix(train_X, label=train_y)
+        print("✔ DMatrix built successfully.")
+    except Exception as e:
+        print("✘ DMatrix failed:", e)
+        sys.exit(1)
+
+    # Proceed to training…
+    params = {
+        "objective": "multi:softprob",
+        "num_class": len(np.unique(train_y)),
+        "eval_metric": "mlogloss",
+        "max_depth": 4,
+        "eta": 0.1,
+        "verbosity": 1
+    }
+    booster = xgb.train(params, dtrain, num_boost_round=50)
+    end_time = time.time()
+    print(f"Trained XGBoost.train in {end_time - start_time} secs.")
+    print("✅ XGBoost training completed.")
 
     # Evaluate the model on validation set
-    y_pred = xgb.predict(test_X)
+    y_pred = xgb_model.predict(valid_X)
+    print(classification_report(valid_y, y_pred))
+
+    # Evaluate the model on test set
+    y_pred = xgb_model.predict(test_X)
     print(classification_report(test_y, y_pred))

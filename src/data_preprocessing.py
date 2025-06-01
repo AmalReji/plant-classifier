@@ -12,12 +12,13 @@ import cv2
 from PIL import Image
 
 
-def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32) -> DataLoader:
+def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32, num_workers: int = 4) -> DataLoader:
     """ Preprocess images in the dataset directory for a specific model.
     Args:
         dataset_dir (Path): Directory containing images organized in subfolders by class.
         model_name (str): Name of the model to use for preprocessing.
         batch_size (int): Batch size for DataLoader.
+        num_workers (int): Number of worker threads for DataLoader.
     Returns:
         DataLoader: PyTorch DataLoader with balanced classes.
     """
@@ -40,7 +41,7 @@ def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32) 
 
     # Balance classes using a sampler
     sampler = WeightedRandomSampler(weights=image_weights, num_samples=sample_count, replacement=True)
-    dataloader = DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=4)
+    dataloader = DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=num_workers)
 
     return dataloader
 
