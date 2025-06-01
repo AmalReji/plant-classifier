@@ -15,14 +15,14 @@ python import_data.py
 
 # Plant Classifier
 
-A machine learning pipeline for classifying healthy vs unhealthy plant leaves using transfer learning with CNN feature extraction and XGBoost classification.
+A machine learning pipeline for classifying healthy vs unhealthy plant leaves using transfer learning with CNN feature extraction and XGBoost classification. This allows interpretation of model feature importance.
 
 ## Architecture
 
 The project uses a hybrid approach:
 - **Feature Extraction**: Pre-trained ResNet50 model (without final classification layer)
-- **Classification**: XGBoost classifier trained on extracted features
 - **Data Pipeline**: PyTorch DataLoaders with class balancing via WeightedRandomSampler
+- **Classification**: XGBoost classifier trained on extracted features
 - **Database**: PostgreSQL star schema for training experiment tracking (coming soon)
 
 ## Project Structure
@@ -32,7 +32,8 @@ plant-classifier/
 ├── src/
 │   ├── import_data.py          # Download dataset from Kaggle
 │   ├── data_preprocessing.py   # Image preprocessing and DataLoader creation
-│   └── train_model.py          # Feature extraction and model training
+│   ├── extract_features.py     # Feature extraction using pre-trained CNN
+│   └── train_model.py          # Train XGBoost classifier on extracted features
 ├── app/                        # Application deployment (TBD)
 ├── tests/                      # Unit tests
 ├── data/                       # Dataset (auto-downloaded, gitignored)
@@ -72,12 +73,13 @@ plant-classifier/
 
 ```bash
 cd src
+python extract_features.py
 python train_model.py
 ```
 
 This will:
 1. Load and preprocess images from `data/Plants_2/train`, `valid`, and `test` directories
-2. Extract features using pre-trained ResNet50
+2. Extract features using pre-trained CNN (currently ResNet50)
 3. Train an XGBoost classifier on the extracted features
 4. Evaluate performance on the test set
 
@@ -85,7 +87,6 @@ This will:
 
 - **Class Balancing**: Uses WeightedRandomSampler to handle imbalanced datasets
 - **Transfer Learning**: Leverages ResNet50 pre-trained on ImageNet for feature extraction
-- **Efficient Processing**: Multi-worker DataLoaders for faster image loading
 - **Model Flexibility**: Easy to swap different pre-trained models via `model_name` parameter
 
 ## Dataset
@@ -113,6 +114,12 @@ This will enable:
 
 The current pipeline extracts high-dimensional features from ResNet50's penultimate layer and trains an XGBoost classifier. Performance metrics are displayed via scikit-learn's classification report.
 
+### Current Results
+
+| Dataset | Accuracy | 
+|---------|----------|
+| Validation | 76%   |  
+| Test | 75% | 
 ## Future Enhancements
 
 - [x] Apply correct preprocessing depending on the chosen CNN
