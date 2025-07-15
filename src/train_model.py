@@ -7,35 +7,42 @@ import sys
 from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report
 
-if __name__ == '__main__':
-    # Load pre-saved train_X.npy/train_y.npy, cast label→int32
-    train_X = np.load('train_X.npy')
-    train_y = np.load('train_y.npy')
-    valid_X = np.load('valid_X.npy')
-    valid_y = np.load('valid_y.npy')
-    test_X = np.load('test_X.npy')
-    test_y = np.load('test_y.npy')
+def train_xgboost(train_X, train_y, valid_X, valid_y, test_X, test_y, objective='multi:softmax',
+                num_class=None, eval_metric='mlogloss', n_jobs=1, verbosity=1, n_estimators=100,
+                max_depth=3):
+    """ Train an XGBoost model on the provided training data.
+
+    Args:
+        train_X (np.ndarray): Training features.
+        train_y (np.ndarray): Training labels.
+        valid_X (np.ndarray): Validation features.
+        valid_y (np.ndarray): Validation labels.
+        test_X (np.ndarray): Test features.
+        test_y (np.ndarray): Test labels.
+        objective (str): Objective to use for training.
+        num_class (int): Number of classes.
+        eval_metric (str): Eval metric to use.
+        n_jobs (int): Number of jobs to run in parallel.
+        verbosity (int): Verbosity level.
+        n_estimators (int): Number of estimators.
+        max_depth (int): Maximum depth of the model.
+    """
+
+    if num_class is None:
+        num_class = len(set(train_y))
 
     print(f"Training on {len(train_y)} samples with {train_X.shape[1]} features.")
-    # print(f"train_X.dtype={train_X.dtype}, train_X.shape={train_X.shape}")
-    # print(f"train_y.dtype={train_y.dtype}, train_y.shape={train_y.shape}")
-
-    # # Reduce dimensionality using PCA
-    # print(f"Original number of features: {train_X.shape[1]}")
-    # pca = PCA(n_components=10)  # Try fewer components
-    # train_X_reduced = pca.fit_transform(train_X)
-    # print("Reduced features to", train_X_reduced.shape[1], "components.")
 
     # Train xgboost model using the extracted features
     start_time = time.time()
     xgb_model = xgb.XGBClassifier(
-        objective='multi:softmax',
-        num_class=len(set(train_y)),  # e.g., 22 classes
-        eval_metric='mlogloss',
-        n_jobs=1,
-        verbosity=1,
-        n_estimators=50,
-        max_depth=4
+        objective=objective,
+        num_class=num_class,  # e.g., 22 classes
+        eval_metric=eval_metric,
+        n_jobs=n_jobs,
+        verbosity=verbosity,
+        n_estimators=n_estimators,
+        max_depth=max_depth
     )
 
     # Train the model
@@ -43,14 +50,25 @@ if __name__ == '__main__':
     end_time = time.time()
     print(f"Trained XGBoost model in {end_time - start_time} secs.")
 
-    # Evaluate the model on validation set
-    # y_pred = xgb_model.predict(valid_X)
-    # print(classification_report(valid_y, y_pred))
+    return xgb_model
+
+if __name__ == '__main__':
+    # Load pre-saved train, validation, and test sets
+    train_X = np.load('train_X.npy')
+    train_y = np.load('train_y.npy')
+    valid_X = np.load('valid_X.npy')
+    valid_y = np.load('valid_y.npy')
+    test_X = np.load('test_X.npy')
+    test_y = np.load('test_y.npy')
+
+    xgb_model = train_xgboost(train_X, train_y, valid_X, valid_y, test_X, test_y)
 
     # Evaluate the model on test set
     y_pred_test = xgb_model.predict(test_X)
+    print("Test Set Classification Report:")
     print(classification_report(test_y, y_pred_test))
 
     # Evaluate the model on validation set
     y_pred_valid = xgb_model.predict(valid_X)
-    print(classification_report(test_y, y_pred_valid))
+    print("Validation Set Classification Report:")
+    print(classification_report(valid_y, y_pred_valid))
