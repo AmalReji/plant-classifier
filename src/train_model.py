@@ -41,35 +41,16 @@ if __name__ == '__main__':
     # Train the model
     xgb_model.fit(train_X, train_y)
     end_time = time.time()
-    print(f"Trained XGBoost model.fit in {end_time - start_time} secs.")
-
-    start_time = time.time()
-    # Build DMatrix safely (no leftover worker processes)
-    try:
-        dtrain = xgb.DMatrix(train_X, label=train_y)
-        print("✔ DMatrix built successfully.")
-    except Exception as e:
-        print("✘ DMatrix failed:", e)
-        sys.exit(1)
-
-    # Proceed to training…
-    params = {
-        "objective": "multi:softprob",
-        "num_class": len(np.unique(train_y)),
-        "eval_metric": "mlogloss",
-        "max_depth": 4,
-        "eta": 0.1,
-        "verbosity": 1
-    }
-    booster = xgb.train(params, dtrain, num_boost_round=50)
-    end_time = time.time()
-    print(f"Trained XGBoost.train in {end_time - start_time} secs.")
-    print("✅ XGBoost training completed.")
+    print(f"Trained XGBoost model in {end_time - start_time} secs.")
 
     # Evaluate the model on validation set
-    y_pred = xgb_model.predict(valid_X)
-    print(classification_report(valid_y, y_pred))
+    # y_pred = xgb_model.predict(valid_X)
+    # print(classification_report(valid_y, y_pred))
 
     # Evaluate the model on test set
-    y_pred = xgb_model.predict(test_X)
-    print(classification_report(test_y, y_pred))
+    y_pred_test = xgb_model.predict(test_X)
+    print(classification_report(test_y, y_pred_test))
+
+    # Evaluate the model on validation set
+    y_pred_valid = xgb_model.predict(valid_X)
+    print(classification_report(test_y, y_pred_valid))
