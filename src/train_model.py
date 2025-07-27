@@ -7,23 +7,19 @@ import sys
 from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report
 
-def train_xgboost(train_X, train_y, valid_X, valid_y, test_X, test_y, objective='multi:softmax',
-                num_class=None, eval_metric='mlogloss', n_jobs=1, verbosity=1, n_estimators=100,
-                max_depth=3):
+def train_xgboost(train_X, train_y, objective='multi:softmax', num_class=None, eval_metric='mlogloss', n_jobs=1,
+                  verbosity=0, n_estimators=100, max_depth=3):
     """ Train an XGBoost model on the provided training data.
 
     Args:
         train_X (np.ndarray): Training features.
         train_y (np.ndarray): Training labels.
-        valid_X (np.ndarray): Validation features.
-        valid_y (np.ndarray): Validation labels.
-        test_X (np.ndarray): Test features.
-        test_y (np.ndarray): Test labels.
         objective (str): Objective to use for training.
         num_class (int): Number of classes.
         eval_metric (str): Eval metric to use.
         n_jobs (int): Number of jobs to run in parallel.
         verbosity (int): Verbosity level.
+            0: silent, 1: info.
         n_estimators (int): Number of estimators.
         max_depth (int): Maximum depth of the model.
     """
@@ -31,7 +27,9 @@ def train_xgboost(train_X, train_y, valid_X, valid_y, test_X, test_y, objective=
     if num_class is None:
         num_class = len(set(train_y))
 
-    print(f"Training on {len(train_y)} samples with {train_X.shape[1]} features.")
+    if verbosity == 1:
+        print(f"Training XGBoost model with {num_class} classes")
+        print(f"Training on {len(train_y)} samples with {train_X.shape[1]} features.")
 
     # Train xgboost model using the extracted features
     start_time = time.time()
@@ -48,9 +46,12 @@ def train_xgboost(train_X, train_y, valid_X, valid_y, test_X, test_y, objective=
     # Train the model
     xgb_model.fit(train_X, train_y)
     end_time = time.time()
-    print(f"Trained XGBoost model in {end_time - start_time} secs.")
+    time_taken = end_time - start_time
 
-    return xgb_model
+    if verbosity == 1:
+        print(f"Trained XGBoost model in {round(time_taken, 2)} secs.")
+
+    return xgb_model, time_taken
 
 if __name__ == '__main__':
     # Load pre-saved train, validation, and test sets
@@ -61,7 +62,7 @@ if __name__ == '__main__':
     test_X = np.load('test_X.npy')
     test_y = np.load('test_y.npy')
 
-    xgb_model = train_xgboost(train_X, train_y, valid_X, valid_y, test_X, test_y)
+    xgb_model = train_xgboost(train_X, train_y)
 
     # Evaluate the model on test set
     y_pred_test = xgb_model.predict(test_X)
