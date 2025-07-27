@@ -40,7 +40,8 @@ def train_xgboost(train_X, train_y, objective='multi:softmax', num_class=None, e
         n_jobs=n_jobs,
         verbosity=verbosity,
         n_estimators=n_estimators,
-        max_depth=max_depth
+        max_depth=max_depth,
+        random_state=42  # For reproducibility
     )
 
     # Train the model
