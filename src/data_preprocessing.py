@@ -12,13 +12,14 @@ import cv2
 from PIL import Image
 
 
-def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32, num_workers: int = 4) -> DataLoader:
+def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32, num_workers: int = 4, sampling_method="none") -> DataLoader:
     """ Preprocess images in the dataset directory for a specific model.
     Args:
         dataset_dir (Path): Directory containing images organized in subfolders by class.
         model_name (str): Name of the model to use for preprocessing.
         batch_size (int): Batch size for DataLoader.
         num_workers (int): Number of worker threads for DataLoader.
+        sampling_method (str): Method for balancing classes. Options: "over", "under", "none".
     Returns:
         DataLoader: PyTorch DataLoader with balanced classes.
     """
@@ -31,10 +32,17 @@ def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32, 
 
     # Count samples per class
     class_counts = Counter([class_index for image, class_index in dataset])
-
-    # Give minority classes a higher weight
     sample_count = len(dataset)
-    class_weights = {cls: sample_count / class_count for cls, class_count in class_counts.items()}
+
+    if sampling_method == "over":
+        # Give minority classes a higher weight
+        class_weights = {cls: sample_count / class_count for cls, class_count in class_counts.items()}
+    elif sampling_method == "under":
+        # Give majority classes a lower weight
+        class_weights = {cls: 1.0 / class_count for cls, class_count in class_counts.items()}
+    elif sampling_method == "none":
+        # No balancing, all classes have equal weight
+        class_weights = {cls: 1.0 for cls in class_counts.keys()}
 
     # Compute weights for each image
     image_weights = [class_weights[class_index] for image, class_index in dataset]
