@@ -5,6 +5,8 @@ from train_model import train_xgboost
 from sklearn.model_selection import ParameterGrid
 from pathlib import Path
 import pandas as pd
+import subprocess
+import json
 
 # Choosing the best parameters for data preprocessing, feature extraction, and model training
 def hyperparameter_tuning():
@@ -39,14 +41,21 @@ def hyperparameter_tuning():
 
     best_accuracy = 0.0
     best_params = None
-
     training_order = 0
     trained_models = {}
+
+    # Create temporary directory for intermediate files
+    Path('temp_hyperparameter_tuning').mkdir(parents=True, exist_ok=True)
+
     for params in param_grid:
         training_order += 1
         print(f"\nTraining iteration {training_order}/{len(param_grid)}")
         print(f"Testing parameters: {params}")
 
+        # Unique identifier for this parameter set
+        param_id = f"param_set_{training_order}"
+
+        # TO DO: PERFORM PREPROCESSING IN SEPARATE SCRIPT, THEN CALL USING SUBPROCESS
         # Preprocess images
         train_loader = preprocess_images(
             dataset_dir=Path('../data/Plants_2/train'),
@@ -54,7 +63,6 @@ def hyperparameter_tuning():
             batch_size=params['batch_size'],
             num_workers=params['num_workers'],
             sampling_method=params['sampling_method']
-
         )
 
         valid_loader = preprocess_images(
@@ -99,7 +107,7 @@ def hyperparameter_tuning():
         print(f"Current Best Accuracy: {best_accuracy:.4f} with parameters: {best_params}")
 
         trained_model = list(params.values()) + [accuracy]
-        trained_models[training_order] = trained_model
+        trained_models[param_id] = trained_model
 
     print(f"Best parameters: {best_params}")
     print(f"Best accuracy: {best_accuracy:.4f}")
