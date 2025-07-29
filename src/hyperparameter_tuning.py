@@ -44,8 +44,12 @@ def hyperparameter_tuning():
     training_order = 0
     trained_models = {}
 
+    # Generate session timestamp for unique identification
+    session_timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
+
     # Create temporary directory for intermediate files
-    Path('temp_hyperparameter_tuning').mkdir(parents=True, exist_ok=True)
+    temp_dir = Path('temp_hyperparameter_tuning')
+    temp_dir.mkdir(parents=True, exist_ok=True)
 
     for params in param_grid:
         training_order += 1
@@ -53,9 +57,51 @@ def hyperparameter_tuning():
         print(f"Testing parameters: {params}")
 
         # Unique identifier for this parameter set
-        param_id = f"param_set_{training_order}"
+        param_id = f"{session_timestamp}_iter_{training_order}"
 
-        # TO DO: PERFORM PREPROCESSING IN SEPARATE SCRIPT, THEN CALL USING SUBPROCESS
+        # PERFORM PREPROCESSING IN SEPARATE SCRIPT, THEN CALL USING SUBPROCESS
+        try:
+            # Step 1: Feature extraction using subprocess
+            print("Extracting features...")
+            feature_extraction_cmd = [
+                'python', 'feature_extraction_subprocess.py',
+                '--model_name', params['model_name'],
+                '--batch_size', str(params['batch_size']),
+                '--num_workers', str(params['num_workers']),
+                '--sampling_method', params['sampling_method']
+            ]
+
+            result = subprocess.run(feature_extraction_cmd,
+                                    capture_output=True, text=True, check=True, cwd=str(temp_dir))
+
+            if result.returncode != 0:
+                print(f"Error in feature extraction: {result.stderr}")
+                continue
+
+            # Step 2: Model training using subprocess
+            print("Training model...")
+            model_training_cmd = [
+                'python', 'model_training_subprocess.py',
+                '--objective', params['objective'],
+                '--eval_metric', params['eval_metric'],
+                '--n_estimators', str(params['n_estimators']),
+                '--max_depth', str(params['max_depth']),
+                '--param_id', param_id
+            ]
+
+            result = subprocess.run(model_training_cmd,
+                                    capture_output=True, text=True, check=True, cwd=str(temp_dir))
+
+            if result.returncode != 0:
+                print(f"Error in model training: {result.stderr}")
+                continue
+
+            # Step 3: Read results
+            results_file = temp_dir / f"{param_id}_results.json"
+        except Exception as e:
+            print(f"Error in iteration {training_order}: {e}")
+            continue
+
         # Preprocess images
         train_loader = preprocess_images(
             dataset_dir=Path('../data/Plants_2/train'),
