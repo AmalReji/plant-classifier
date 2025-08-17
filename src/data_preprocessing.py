@@ -1,15 +1,8 @@
-import time
 from collections import Counter
 from pathlib import Path
-
-import PIL
-import numpy as np
-import torch
-from torchvision import datasets, transforms
-from torchvision.models import get_weight
 from torch.utils.data import DataLoader, WeightedRandomSampler
-import cv2
-from PIL import Image
+from torchvision import datasets
+from torchvision.models import get_weight
 
 
 def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32, num_workers: int = 4, sampling_method="none") -> DataLoader:

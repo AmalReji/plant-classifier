@@ -1,11 +1,15 @@
+import json
 import time
+from pathlib import Path
 
+import pandas as pd
 import xgboost as xgb
 import numpy as np
 import sys
 
 from sklearn.decomposition import PCA
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, accuracy_score
+
 
 def train_xgboost(train_X, train_y, objective='multi:softmax', num_class=None, eval_metric='mlogloss', n_jobs=1,
                   verbosity=0, n_estimators=100, max_depth=3):
@@ -63,14 +67,78 @@ if __name__ == '__main__':
     test_X = np.load('test_X.npy')
     test_y = np.load('test_y.npy')
 
-    xgb_model = train_xgboost(train_X, train_y)
+    # Read hyperparameters from JSON
+    hyperparameters_file = Path(f"model_hyperparameters.json")
+    if hyperparameters_file.exists():
+        with open(hyperparameters_file, 'r') as f:
+            hyperparameters = json.load(f)
+    sampling_method = hyperparameters['sampling_method']
+    objective = hyperparameters["objective"]
+    num_workers = hyperparameters["num_workers"]
+    n_estimators = hyperparameters["n_estimators"]
+    model_name = hyperparameters["model_name"]
+    max_depth = hyperparameters["max_depth"]
+    eval_metric = hyperparameters["eval_metric"]
+    batch_size = hyperparameters["batch_size"]
+
+    xgb_model, training_time = train_xgboost(train_X, train_y, objective=objective, eval_metric=eval_metric,
+                                             n_estimators=n_estimators, max_depth=max_depth)
 
     # Evaluate the model on test set
-    y_pred_test = xgb_model.predict(test_X)
+    test_pred = xgb_model.predict(test_X)
+    test_accuracy = accuracy_score(test_y, test_pred)
     print("Test Set Classification Report:")
-    print(classification_report(test_y, y_pred_test))
+    print(classification_report(test_y, test_pred))
 
     # Evaluate the model on validation set
-    y_pred_valid = xgb_model.predict(valid_X)
+    valid_pred = xgb_model.predict(valid_X)
+    valid_accuracy = accuracy_score(valid_y, valid_pred)
     print("Validation Set Classification Report:")
-    print(classification_report(valid_y, y_pred_valid))
+    print(classification_report(valid_y, valid_pred))
+
+    # Store model results
+    train_samples = len(train_y)
+    test_samples = len(test_y)
+    valid_samples = len(valid_y)
+
+    model_result = (
+        [sampling_method, objective, num_workers, n_estimators, model_name, max_depth, eval_metric, batch_size,
+         test_accuracy, valid_accuracy, training_time, train_samples, test_samples, valid_samples]
+    )
+
+    # Unique identifier for this parameter set
+    session_timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
+    param_id = f"{session_timestamp}_single_model"
+
+    model_result_dict = {param_id: model_result}
+
+    if model_result_dict:
+        new_results_df = pd.DataFrame.from_dict(
+            model_result_dict,
+            orient='index',
+            columns=(['sampling_method', 'objective', 'num_workers', 'n_estimators', 'model_name', 'max_depth',
+                      'eval_metric', 'batch_size', 'test_accuracy', 'valid_accuracy', 'training_time',
+                      'train_samples', 'test_samples', 'valid_samples'])
+        )
+
+    # Check if results file exists and load it
+    results_file_path = Path('model_training_results.csv')
+    results_file_path.parent.mkdir(exist_ok=True)
+
+    if results_file_path.exists():
+        print(f"Loading existing results from {results_file_path}")
+        existing_results_df = pd.read_csv(results_file_path, index_col='param_id')
+    else:
+        existing_results_df = None
+
+    # Append to existing results if file exists
+    if existing_results_df is not None:
+        print(f"Appending {len(new_results_df)} new results to existing {len(existing_results_df)} results")
+        results_df = pd.concat([existing_results_df, new_results_df])
+    else:
+        results_df = new_results_df
+
+    results_df.to_csv(results_file_path, index_label='param_id')
+
+    print(f"Model training results saved to {results_file_path}")
+    print(f"Total results in file: {len(results_df)}")
