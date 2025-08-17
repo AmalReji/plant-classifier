@@ -230,7 +230,7 @@ def hyperparameter_tuning():
     print(f"Best test accuracy: {best_accuracy:.4f}")
 
     # Check if results file exists and load it
-    results_file_path = Path('hyperparameter_tuning_results.csv')
+    results_file_path = Path('model_training_results.csv')
     results_file_path.parent.mkdir(exist_ok=True)
 
     if results_file_path.exists():
@@ -259,10 +259,6 @@ def hyperparameter_tuning():
 
         print(f"Hyperparameter tuning results saved to {results_file_path}")
         print(f"Total results in file: {len(results_df)}")
-
-
-        # for testing
-        new_results_df.to_csv('latest_hyperparameter_tuning_results.csv', index_label='param_id')
 
 if __name__ == '__main__':
     hyperparameter_tuning()

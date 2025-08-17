@@ -1,14 +1,12 @@
+import json
 import time
 from pathlib import Path
 import numpy as np
 import torch
-from sklearn.decomposition import PCA
 from torch.utils.data import DataLoader
-from data_preprocessing import preprocess_images
 from torchvision.models import get_model
-from xgboost import XGBClassifier
-import xgboost as xgb
-from sklearn.metrics import classification_report
+from data_preprocessing import preprocess_images
+
 
 def extract_features(dataloader: DataLoader, model_name: str, device: str = 'cpu') -> tuple:
     """ Extract features from images using a pre-trained model.
@@ -49,21 +47,32 @@ if __name__ == "__main__":
     valid_dir = Path.joinpath(data_path, "valid")
     test_dir = Path.joinpath(data_path, "test")
 
-    model_name = "ResNet50"
+    # Read hyperparameters from JSON
+    hyperparameters_file = Path(f"model_hyperparameters.json")
+    if hyperparameters_file.exists():
+        with open(hyperparameters_file, 'r') as f:
+            hyperparameters = json.load(f)
+    sampling_method = hyperparameters["sampling_method"]
+    num_workers = hyperparameters["num_workers"]
+    model_name = hyperparameters["model_name"]
+    batch_size = hyperparameters["batch_size"]
 
     # Preprocess images and create DataLoaders
     # start_time = time.time()
-    # train_loader = preprocess_images(dataset_dir=Path(train_dir), model_name=model_name)
+    # train_loader = preprocess_images(dataset_dir=Path(valid_dir), model_name=model_name, batch_size=batch_size,
+    #                                      num_workers=num_workers, sampling_method=sampling_method)
     # end_time = time.time()
     # print(f"Loaded {len(train_loader.dataset)} training images in {end_time - start_time} secs.")
 
     start_time = time.time()
-    valid_loader = preprocess_images(dataset_dir=Path(valid_dir), model_name=model_name)
+    valid_loader = preprocess_images(dataset_dir=Path(valid_dir), model_name=model_name, batch_size=batch_size,
+                                     num_workers=num_workers, sampling_method=sampling_method)
     end_time = time.time()
     print(f"Loaded {len(valid_loader.dataset)} validation images in {end_time - start_time} secs.")
 
     start_time = time.time()
-    test_loader = preprocess_images(dataset_dir=Path(test_dir), model_name=model_name)
+    test_loader = preprocess_images(dataset_dir=Path(valid_dir), model_name=model_name, batch_size=batch_size,
+                                     num_workers=num_workers, sampling_method=sampling_method)
     end_time = time.time()
     print(f"Loaded {len(test_loader.dataset)} test images in {end_time - start_time} secs.")
 
@@ -82,12 +91,6 @@ if __name__ == "__main__":
     test_X, test_y = extract_features(dataloader=test_loader, model_name=model_name)
     end_time = time.time()
     print(f"Extracted features from {len(test_y)} test images in {end_time - start_time} secs.")
-
-    # # Subset train_X and train_y to the first 1000 samples for faster training (still crashes pycharm
-    # start_time = time.time()
-    # subset_idx = np.random.choice(len(train_X), size=1000, replace=False)
-    # train_X = train_X[subset_idx]
-    # train_y = train_y[subset_idx]
 
     # Save the extracted features and labels to .npy files
     # np.save(file='train_X.npy', arr=train_X)
