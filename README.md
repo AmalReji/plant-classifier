@@ -38,7 +38,8 @@ plant-classifier/
 ├── tests/                      # Unit tests
 ├── data/                       # Dataset (auto-downloaded, gitignored)
 ├── requirements.txt            # Python dependencies
-└── main.py                     # Main application entry point (TBD)
+├── main.py                     # Main application entry point (TBD)
+└── .env                        # DB credentials: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 ```
 
 ## Requirements
