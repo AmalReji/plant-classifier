@@ -6,6 +6,8 @@ from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import ParameterGrid
 
+from db_utils import ModelResultsDB
+
 '''This script performs hyperparameter tuning for data preprocessing, feature extraction, and model training.'''
 
 def hyperparameter_tuning():
@@ -229,16 +231,6 @@ def hyperparameter_tuning():
     print(f"Best parameters: {best_params}")
     print(f"Best test accuracy: {best_accuracy:.4f}")
 
-    # Check if results file exists and load it
-    results_file_path = Path('model_training_results.csv')
-    results_file_path.parent.mkdir(exist_ok=True)
-
-    if results_file_path.exists():
-        print(f"Loading existing results from {results_file_path}")
-        existing_results_df = pd.read_csv(results_file_path, index_col='param_id')
-    else:
-        existing_results_df = None
-
     if trained_models:
         new_results_df = pd.DataFrame.from_dict(
             trained_models,
@@ -247,6 +239,35 @@ def hyperparameter_tuning():
                      ['test_accuracy', 'valid_accuracy', 'training_time',
                       'train_samples', 'test_samples', 'valid_samples'])
         )
+
+    # Upload results to database
+    db = ModelResultsDB()
+    database_success = False
+    if db.is_connected():
+        database_success = db.save_model_results(new_results_df)
+        if database_success:
+            print("Model training results successfully saved to the database.")
+            stats = db.get_summary_stats()
+            if stats:
+                print("Database Summary Stats:")
+                for key, value in stats.items():
+                    print(f"{key}: {value}")
+        else:
+            print("Failed to save model results to the database, falling back to CSV.")
+    else:
+        print("Database connection failed, falling back to CSV.")
+
+    # Fallback to CSV if DB connection fails
+    if not database_success:
+        # Check if results file exists and load it
+        results_file_path = Path('model_training_results.csv')
+        results_file_path.parent.mkdir(exist_ok=True)
+
+        if results_file_path.exists():
+            print(f"Loading existing results from {results_file_path}")
+            existing_results_df = pd.read_csv(results_file_path, index_col='param_id')
+        else:
+            existing_results_df = None
 
         # Append to existing results if file exists
         if existing_results_df is not None:

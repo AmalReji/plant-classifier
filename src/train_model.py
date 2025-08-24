@@ -9,6 +9,7 @@ import sys
 
 from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report, accuracy_score
+from db_utils import ModelResultsDB
 
 
 def train_xgboost(train_X, train_y, objective='multi:softmax', num_class=None, eval_metric='mlogloss', n_jobs=1,
@@ -121,24 +122,44 @@ if __name__ == '__main__':
                       'train_samples', 'test_samples', 'valid_samples'])
         )
 
-    # Check if results file exists and load it
-    results_file_path = Path('model_training_results.csv')
-    results_file_path.parent.mkdir(exist_ok=True)
-
-    if results_file_path.exists():
-        print(f"Loading existing results from {results_file_path}")
-        existing_results_df = pd.read_csv(results_file_path, index_col='param_id')
+    # Upload results to database
+    db = ModelResultsDB()
+    database_success = False
+    if db.is_connected():
+        database_success = db.save_model_results(new_results_df)
+        if database_success:
+            print("Model training results successfully saved to the database.")
+            stats = db.get_summary_stats()
+            if stats:
+                print("Database Summary Stats:")
+                for key, value in stats.items():
+                    print(f"{key}: {value}")
+        else:
+            print("Failed to save model results to the database, falling back to CSV.")
     else:
-        existing_results_df = None
+        print("Database connection failed, falling back to CSV.")
 
-    # Append to existing results if file exists
-    if existing_results_df is not None:
-        print(f"Appending {len(new_results_df)} new results to existing {len(existing_results_df)} results")
-        results_df = pd.concat([existing_results_df, new_results_df])
-    else:
-        results_df = new_results_df
 
-    results_df.to_csv(results_file_path, index_label='param_id')
+    # Fallback to CSV if DB connection fails
+    if not database_success:
+        # Check if results file exists and load it
+        results_file_path = Path('model_training_results.csv')
+        results_file_path.parent.mkdir(exist_ok=True)
 
-    print(f"Model training results saved to {results_file_path}")
-    print(f"Total results in file: {len(results_df)}")
+        if results_file_path.exists():
+            print(f"Loading existing results from {results_file_path}")
+            existing_results_df = pd.read_csv(results_file_path, index_col='param_id')
+        else:
+            existing_results_df = None
+
+        # Append to existing results if file exists
+        if existing_results_df is not None:
+            print(f"Appending {len(new_results_df)} new results to existing {len(existing_results_df)} results")
+            results_df = pd.concat([existing_results_df, new_results_df])
+        else:
+            results_df = new_results_df
+
+        results_df.to_csv(results_file_path, index_label='param_id')
+
+        print(f"Model training results saved to {results_file_path}")
+        print(f"Total results in file: {len(results_df)}")

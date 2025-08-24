@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 # Database configuration
-load_dotenv()
+load_dotenv()  # allow os.getenv() to access variables in .env file
 
 host = os.getenv("DB_HOST")
 port = os.getenv("DB_PORT")
