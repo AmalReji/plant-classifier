@@ -1,8 +1,8 @@
-{"model_name": "ResNet50",
-"sampling_method": "over",
+{"model_name": "EfficientNet_B0",
+"sampling_method": "none",
 "objective": "multi:softmax",
 "num_workers": 0,
-"n_estimators": 100,
-"max_depth": 5,
+"n_estimators": 300,
+"max_depth": 7,
 "eval_metric": "mlogloss",
 "batch_size": 64}

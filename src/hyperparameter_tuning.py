@@ -22,15 +22,15 @@ def hyperparameter_tuning():
 
     # Define parameter grid for feature extraction
     feature_extraction_params = {
-        'model_name': ['ResNet50', 'EfficientNet_B0']
+        'model_name': ['EfficientNet_B0']  #'ResNet50',
     }
 
     # Define parameter grid for model training
     model_params = {
         'objective': ['multi:softmax'],
         'eval_metric': ['mlogloss'],
-        'n_estimators': [100, 200],
-        'max_depth': [3, 5]
+        'n_estimators': [50, 100, 150, 200, 300],
+        'max_depth': [3, 5, 7]
     }
 
     # Create a grid of all parameters
