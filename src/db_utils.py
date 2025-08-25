@@ -10,6 +10,8 @@ from IPython.core.display_functions import display
 from dotenv import load_dotenv
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from sqlalchemy import create_engine, text
+from sqlalchemy.dialects.postgresql import insert
+
 
 class ModelResultsDB:
     """ Class to handle database operations for model training results """
@@ -93,7 +95,7 @@ class ModelResultsDB:
             print(f"Failed to create table: {e}")
 
     def save_model_results(self, model_result: DataFrame):
-        """ Save a DataFrame of model results to the database
+        """ Save a DataFrame of model results to the database, ignoring duplicates (rows already in the table)
 
         Args:
             model_result (DataFrame): List of model hyperparameters and results
@@ -106,19 +108,32 @@ class ModelResultsDB:
             return False
 
         try:
-            # Write to a temporary table and then upsert to avoid duplicates
-            temp_table = 'temp_model_results'
-            model_result.to_sql(temp_table, self.engine, if_exists='replace', index_label='param_id')
-            with self.engine.connect() as connection:
-                connection.execute(
-                    text(f"""
-                    INSERT INTO model_results 
-                    SELECT * FROM {temp_table}
-                    ON CONFLICT (param_id) DO NOTHING;
-                    DROP TABLE {temp_table};
-                    """)
-                )
-                connection.commit()
+            # Custom UPSERT function with ON CONFLICT DO NOTHING
+            def upsert(table, conn, keys, data_iter):
+                data = [dict(zip(keys, row)) for row in data_iter]
+                stmt = insert(table.table).values(data)
+                stmt = stmt.on_conflict_do_nothing(index_elements=['param_id'])
+                conn.execute(stmt)
+
+            model_result.to_sql("model_results", self.engine, if_exists='append',
+                                index_label="param_id",  # don't insert pandas index
+                                method=upsert  # use custom upsert function
+                                )
+
+
+            # # Write to a temporary table and then upsert to avoid duplicates
+            # temp_table = 'temp_model_results'
+            # model_result.to_sql(temp_table, self.engine, if_exists='replace', index_label='param_id')
+            # with self.engine.connect() as connection:
+            #     connection.execute(
+            #         text(f"""
+            #         INSERT INTO model_results
+            #         SELECT * FROM {temp_table}
+            #         ON CONFLICT (param_id) DO NOTHING;
+            #         DROP TABLE {temp_table};
+            #         """)
+            #     )
+            #     connection.commit()
             print("Model results saved to database (duplicates ignored).")
             return True
         except Exception as e:
