@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.model_selection import ParameterGrid
 
 from db_utils import ModelResultsDB
+from src.db_utils import StarSchemaDB
 
 '''This script performs hyperparameter tuning for data preprocessing, feature extraction, and model training.'''
 
@@ -15,22 +16,22 @@ def hyperparameter_tuning():
 
     # Define parameter grid for data preprocessing
     preprocess_params = {
-        'sampling_method': ['over', 'under', 'none'],  # Options: "over", "under", "none"
+        'sampling_method': ["over", "under", "none"],  # Options: "over", "under", "none"
         'batch_size': [64],
         'num_workers': [0]
     }
 
     # Define parameter grid for feature extraction
     feature_extraction_params = {
-        'model_name': ['EfficientNet_B0']  #'ResNet50',
+        'model_name': ['ResNet50','EfficientNet_B0']  #'ResNet50',
     }
 
     # Define parameter grid for model training
     model_params = {
         'objective': ['multi:softmax'],
         'eval_metric': ['mlogloss'],
-        'n_estimators': [50, 100, 150, 200, 300],
-        'max_depth': [3, 5, 7]
+        'n_estimators': [50, 100, 150, 200, 300], #[50, 100, 150, 200, 300],
+        'max_depth': [3, 5, 7] #[3, 5, 7]
     }
 
     # Create a grid of all parameters
@@ -241,10 +242,12 @@ def hyperparameter_tuning():
         )
 
     # Upload results to database
-    db = ModelResultsDB()
+    # db = ModelResultsDB() # old db
+    db = StarSchemaDB()
     database_success = False
     if db.is_connected():
-        database_success = db.save_model_results(new_results_df)
+        # database_success = db.save_model_results(new_results_df)
+        database_success = db.save_training_results(new_results_df)
         if database_success:
             print("Model training results successfully saved to the database.")
             stats = db.get_summary_stats()
