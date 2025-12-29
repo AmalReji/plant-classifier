@@ -1,9 +1,10 @@
-kagglehub==0.3.12
-numpy==1.26.4
-opencv_python==4.11.0.86
-opencv_python_headless==4.11.0.86
-Pillow==11.2.1
-scikit_learn==1.6.1
+ipython==8.12.3
+kagglehub==0.3.13
+numpy==2.4.0
+pandas==2.3.3
+python-dotenv==1.2.1
+scikit_learn==1.8.0
+SQLAlchemy==2.0.45
 torch==2.2.2
 torchvision==0.17.2
-xgboost==3.0.2
+xgboost==3.1.2
