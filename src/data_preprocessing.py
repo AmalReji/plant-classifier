@@ -24,8 +24,9 @@ def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32, 
     dataset = datasets.ImageFolder(root=str(dataset_dir), transform=preprocess)
 
     # Count samples per class
-    class_counts = Counter([class_index for image, class_index in dataset])
-    sample_count = len(dataset)
+    targets = dataset.targets
+    class_counts = Counter(targets)
+    sample_count = len(targets)
 
     if sampling_method == "over":
         # Give minority classes a higher weight
@@ -38,7 +39,7 @@ def preprocess_images(dataset_dir: Path, model_name: str, batch_size: int = 32, 
         class_weights = {cls: 1.0 for cls in class_counts.keys()}
 
     # Compute weights for each image
-    image_weights = [class_weights[class_index] for image, class_index in dataset]
+    image_weights = [class_weights[class_index] for class_index in targets]
 
     # Balance classes using a sampler
     sampler = WeightedRandomSampler(weights=image_weights, num_samples=sample_count, replacement=True)
