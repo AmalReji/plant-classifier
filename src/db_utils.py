@@ -116,6 +116,7 @@ class StarSchemaDB:
             test_accuracy FLOAT,
             valid_accuracy FLOAT,
             training_time FLOAT,
+            feature_extract_time FLOAT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
@@ -290,9 +291,9 @@ class StarSchemaDB:
                         text("""
                             INSERT INTO fact_training_results 
                             (param_id, model_id, hyperparameter_id, preprocessing_id, dataset_id, 
-                             test_accuracy, valid_accuracy, training_time)
+                             test_accuracy, valid_accuracy, training_time, feature_extract_time)
                             VALUES (:param_id, :model_id, :hyperparameter_id, :preprocessing_id, :dataset_id,
-                                    :test_accuracy, :valid_accuracy, :training_time)
+                                    :test_accuracy, :valid_accuracy, :training_time, :feature_extract_time)
                             ON CONFLICT (param_id) DO NOTHING
                         """),
                         {
@@ -303,7 +304,8 @@ class StarSchemaDB:
                             "dataset_id": dataset_id,
                             "test_accuracy": row['test_accuracy'],
                             "valid_accuracy": row['valid_accuracy'],
-                            "training_time": row['training_time']
+                            "training_time": row['training_time'],
+                            "feature_extract_time": row['feature_extract_time']
                         }
                     )
 
