@@ -5,9 +5,10 @@ from itertools import product
 from pathlib import Path
 import pandas as pd
 from sklearn.model_selection import ParameterGrid
+import time
 
-from db_utils import ModelResultsDB
-from src.db_utils import StarSchemaDB
+#from db_utils import ModelResultsDB
+from db_utils import StarSchemaDB
 
 '''This script performs hyperparameter tuning for data preprocessing, feature extraction, and model training.'''
 
@@ -17,21 +18,21 @@ def hyperparameter_tuning():
     # Define parameter grid for data preprocessing
     preprocess_params = {
         'sampling_method': ["over", "under", "none"],  # Options: "over", "under", "none"
-        'batch_size': [64],
+        'batch_size': [128],
         'num_workers': [0]
     }
 
     # Define parameter grid for feature extraction
     feature_extraction_params = {
-        'model_name': ['ResNet50','EfficientNet_B0']  #'ResNet50',
+        'model_name': ['EfficientNet_B0']  #'ResNet50',
     }
 
     # Define parameter grid for model training
     model_params = {
         'objective': ['multi:softmax'],
         'eval_metric': ['mlogloss'],
-        'n_estimators': [50, 100, 150, 200, 300], #[50, 100, 150, 200, 300],
-        'max_depth': [3, 5, 7] #[3, 5, 7]
+        'n_estimators': [150], #[50, 100, 150, 200, 300],
+        'max_depth': [7] #[3, 5, 7]
     }
 
     # Create a grid of all parameters
@@ -95,11 +96,14 @@ def hyperparameter_tuning():
 
             with tempfile.TemporaryFile(mode='w+', encoding='utf-8') as stdout_file, \
                     tempfile.TemporaryFile(mode='w+', encoding='utf-8') as stderr_file:
+
+                extract_start = time.time()
                 result = subprocess.run(feature_extraction_cmd,
                                         stdout=stdout_file,
                                         stderr=stderr_file,
                                         text=True,
                                         cwd=Path.cwd())
+                feature_extract_time = time.time() - extract_start
 
                 # Read the output for debugging if needed
                 stdout_file.seek(0)
@@ -108,6 +112,7 @@ def hyperparameter_tuning():
                 stderr_content = stderr_file.read()
 
             print(f"Feature extraction completed with return code: {result.returncode}")
+            print(f"Feature extraction Time: {feature_extract_time:.2f} seconds")
 
             if result.returncode != 0:
                 print(f"Feature extraction failed with return code: {result.returncode}")
@@ -210,7 +215,7 @@ def hyperparameter_tuning():
                     # Store model results
                     trained_model = (
                             [params[col] for col in column_order] +
-                            [test_accuracy, valid_accuracy, training_time, train_samples, test_samples, valid_samples]
+                            [test_accuracy, valid_accuracy, training_time, train_samples, test_samples, valid_samples, feature_extract_time]
                     )
                     trained_models[param_id] = trained_model
 
@@ -238,7 +243,7 @@ def hyperparameter_tuning():
             orient='index',
             columns=(column_order +
                      ['test_accuracy', 'valid_accuracy', 'training_time',
-                      'train_samples', 'test_samples', 'valid_samples'])
+                      'train_samples', 'test_samples', 'valid_samples', 'feature_extract_time'])
         )
 
     # Upload results to database
