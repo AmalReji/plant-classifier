@@ -4,7 +4,6 @@ import tempfile
 from itertools import product
 from pathlib import Path
 import pandas as pd
-from sklearn.model_selection import ParameterGrid
 import time
 
 #from db_utils import ModelResultsDB
@@ -17,30 +16,30 @@ def hyperparameter_tuning():
 
     # Define parameter grid for data preprocessing
     preprocess_params = {
-        'sampling_method': ["over", "under", "none"],  # Options: "over", "under", "none"
+        'sampling_method': ["under"],  # Options: "over", "under", "none"
         'batch_size': [128],
         'num_workers': [0]
     }
 
     # Define parameter grid for feature extraction
     feature_extraction_params = {
-        'model_name': ['EfficientNet_B0']  #'ResNet50',
+        'model_name': ['EfficientNet_B0']  #'ResNet50', 'EfficientNet_B0'
     }
 
     # Define parameter grid for model training
     model_params = {
         'objective': ['multi:softmax'],
         'eval_metric': ['mlogloss'],
-        'n_estimators': [150], #[50, 100, 150, 200, 300],
-        'max_depth': [7] #[3, 5, 7]
+        'n_estimators': [50], #[50, 100, 150, 200, 300],
+        'max_depth': [3] #[3, 5, 7]
     }
 
     # Create a grid of all parameters
-    param_grid = ParameterGrid({
+    all_params = {
         **preprocess_params,
         **feature_extraction_params,
         **model_params
-    })
+    }
 
     # Create combinations for feature extraction (outer loop)
     feature_combinations = list(product(
@@ -64,7 +63,7 @@ def hyperparameter_tuning():
     trained_models = {}
 
     # Define the order of columns for results DataFrame
-    column_order = list(param_grid[0].keys())
+    column_order = list(all_params.keys())
 
     # Generate session timestamp for unique identification
     session_timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
