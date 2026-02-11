@@ -317,16 +317,18 @@ class StarSchemaDB:
             print(f"Failed to save training results: {e}")
             return False
 
-    def get_best_models(self, test_accuracy_threshold: float = None,
-                       valid_accuracy_threshold: float = None,
-                       training_time_limit: float = None) -> pd.DataFrame:
+    def get_best_models(self, test_accuracy_minimum: float = None,
+                       ftr_extract_time_limit: float = None,
+                       training_time_limit: float = None,
+                        num_models: float = None) -> pd.DataFrame:
         """
         Retrieve models that meet specified performance criteria using star schema.
 
         Args:
-            test_accuracy_threshold (float): Minimum test accuracy
-            valid_accuracy_threshold (float): Minimum validation accuracy
-            training_time_limit (float): Maximum training time in seconds
+            test_accuracy_minimum (float): Minimum test accuracy
+            ftr_extract_time_limit (float): Feature extraction time limit (seconds)
+            training_time_limit (float): XGBoost training time limit (seconds)
+            num_models (float): Number of models to retrieve
 
         Returns:
             pd.DataFrame: DataFrame of models meeting the criteria
@@ -338,6 +340,7 @@ class StarSchemaDB:
         try:
             query = """
             SELECT 
+                f.result_id,
                 f.param_id,
                 m.model_name,
                 h.objective,
@@ -362,23 +365,23 @@ class StarSchemaDB:
             WHERE 1=1
             """
 
-            if test_accuracy_threshold is not None:
-                query += f" AND f.test_accuracy >= {test_accuracy_threshold}"
-            if valid_accuracy_threshold is not None:
-                query += f" AND f.valid_accuracy >= {valid_accuracy_threshold}"
+            if test_accuracy_minimum is not None:
+                query += f" AND f.test_accuracy >= {test_accuracy_minimum}"
+            if ftr_extract_time_limit is not None:
+                query += f" AND f.feature_extract_time <= {ftr_extract_time_limit}"
             if training_time_limit is not None:
                 query += f" AND f.training_time <= {training_time_limit}"
 
             order_clauses = []
-            if test_accuracy_threshold is not None:
-                order_clauses.append("f.test_accuracy DESC")
-            if valid_accuracy_threshold is not None:
-                order_clauses.append("f.valid_accuracy DESC")
-            if training_time_limit is not None:
-                order_clauses.append("f.training_time ASC")
+            order_clauses.append("f.test_accuracy DESC")
+            order_clauses.append("f.feature_extract_time ASC")
+            order_clauses.append("f.training_time ASC")
 
             if order_clauses:
                 query += " ORDER BY " + ", ".join(order_clauses)
+
+            if num_models is not None:
+                query += f" LIMIT {num_models}"
 
             with self.engine.connect() as connection:
                 result = connection.execute(text(query))
