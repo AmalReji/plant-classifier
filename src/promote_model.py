@@ -7,11 +7,8 @@ from pathlib import Path
 import subprocess
 import joblib
 import numpy as np
-import argparse
 
 from db_utils import StarSchemaDB
-from data_preprocessing import preprocess_images
-from extract_features import extract_features
 from train_model import train_xgboost
 
 # Handle the --version argument
