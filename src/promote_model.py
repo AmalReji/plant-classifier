@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import joblib
 import numpy as np
+import pandas as pd
 
 from db_utils import StarSchemaDB
 from train_model import train_xgboost
@@ -90,11 +91,16 @@ else:
     print("Database connection failed.")
 
 # Step 4: Promote model along with hyperparameters and metadata
-metadata = {"version": version, "created_at": datetime.now(tz=timezone.utc).isoformat(), "classes": xgb_model.classes_}
+metadata = {"version": version, "created_at": datetime.now(tz=timezone.utc).isoformat(), "classes": xgb_model.classes_.tolist()}
+
+cleaned_model_params = {
+    k: (v.isoformat() if isinstance(v, pd.Timestamp) else v)
+    for k, v in best_model_params.items()
+}
 
 root_dir = Path.cwd().parent
 Path.joinpath(root_dir, f'app/models/model_v{version}').mkdir(parents=True, exist_ok=True)
 joblib.dump(xgb_model, f'../app/models/model_v{version}/model.joblib')
-json.dump(best_model_params, open(f'../app/models/model_v{version}/model_hp.json', 'w'), indent=2)
+json.dump(cleaned_model_params, open(f'../app/models/model_v{version}/model_hp.json', 'w'), indent=2)
 json.dump(metadata, open(f'../app/models/model_v{version}/metadata.json', 'w'), indent=2)
 print(f"Model saved to app/models/model_v{version}/")
