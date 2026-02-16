@@ -91,7 +91,7 @@ else:
     print("Database connection failed.")
 
 # Step 4: Promote model along with hyperparameters and metadata
-metadata = {"version": version, "created_at": datetime.now(tz=timezone.utc).isoformat(), "classes": xgb_model.classes_.tolist()}
+metadata = {"version": version, "promoted_at": datetime.now(tz=timezone.utc).isoformat(), "classes": xgb_model.classes_.tolist()}
 
 cleaned_model_params = {
     k: (v.isoformat() if isinstance(v, pd.Timestamp) else v)
