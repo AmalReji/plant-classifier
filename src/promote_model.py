@@ -91,7 +91,11 @@ else:
     print("Database connection failed.")
 
 # Step 4: Promote model along with hyperparameters and metadata
-metadata = {"version": version, "promoted_at": datetime.now(tz=timezone.utc).isoformat(), "classes": xgb_model.classes_.tolist()}
+train_dir = Path('../data/Plants_2/train')
+
+metadata = {"version": version,
+            "promoted_at": datetime.now(tz=timezone.utc).isoformat(),
+            "class_names": sorted([d.name for d in train_dir.iterdir() if d.is_dir()])}
 
 cleaned_model_params = {
     k: (v.isoformat() if isinstance(v, pd.Timestamp) else v)
