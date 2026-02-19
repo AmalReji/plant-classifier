@@ -362,7 +362,7 @@ class StarSchemaDB:
             JOIN dim_hyperparameters h ON f.hyperparameter_id = h.hyperparameter_id
             JOIN dim_preprocessing p ON f.preprocessing_id = p.preprocessing_id
             JOIN dim_dataset d ON f.dataset_id = d.dataset_id
-            WHERE 1=1
+            WHERE h.objective = 'multi:softprob'
             """
 
             if test_accuracy_minimum is not None:

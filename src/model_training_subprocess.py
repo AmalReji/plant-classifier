@@ -9,7 +9,7 @@ from train_model import train_xgboost
 
 def main():
     parser = argparse.ArgumentParser(description='Train XGBoost model for hyperparameter tuning.')
-    parser.add_argument('--objective', type=str, default='multi:softmax', help='Objective function for XGBoost.')
+    parser.add_argument('--objective', type=str, default='multi:softprob', help='Objective function for XGBoost.')
     parser.add_argument('--eval_metric', type=str, default='mlogloss', help='Evaluation metric for XGBoost.')
     parser.add_argument('--n_estimators', type=int, default=100, help='Number of trees in the ensemble.')
     parser.add_argument('--max_depth', type=int, default=3, help='Maximum depth of the trees.')
