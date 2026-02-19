@@ -9,10 +9,10 @@ import sys
 
 from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report, accuracy_score
-from db_utils import StarSchemaDB
+#from db_utils import StarSchemaDB
 
 
-def train_xgboost(train_X, train_y, objective='multi:softmax', num_class=None, eval_metric='mlogloss', n_jobs=1,
+def train_xgboost(train_X, train_y, objective='multi:softprob', num_class=None, eval_metric='mlogloss', n_jobs=1,
                   verbosity=0, n_estimators=100, max_depth=3):
     """ Train an XGBoost model on the provided training data.
 
