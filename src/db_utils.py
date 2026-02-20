@@ -2,6 +2,7 @@
 Star Schema Database utility functions for model training results.
 This module implements a star schema with fact and dimension tables.
 """
+import json
 import os
 from typing import Dict, Any, Optional
 import hashlib
@@ -9,6 +10,7 @@ import hashlib
 import pandas as pd
 from IPython.core.display_functions import display
 from dotenv import load_dotenv
+from pygments.lexers.objective import objective
 from sqlalchemy import create_engine, text
 from sqlalchemy.dialects.postgresql import insert
 
@@ -100,7 +102,8 @@ class StarSchemaDB:
             dataset_hash VARCHAR(64) UNIQUE NOT NULL,
             train_samples INTEGER,
             valid_samples INTEGER,
-            test_samples INTEGER
+            test_samples INTEGER,
+            class_names JSONB
         );
         """
 
@@ -220,7 +223,7 @@ class StarSchemaDB:
 
     def _get_or_create_dataset_id(self, params: Dict, connection) -> int:
         """Get existing dataset_id or create new entry"""
-        param_str = f"{params['train_samples']}_{params['valid_samples']}_{params['test_samples']}"
+        param_str = f"{params['train_samples']}_{params['valid_samples']}_{params['test_samples']}_{','.join(params['class_names'])}"
         param_hash = hashlib.sha256(param_str.encode()).hexdigest()
 
         result = connection.execute(
@@ -234,20 +237,21 @@ class StarSchemaDB:
         result = connection.execute(
             text("""
                 INSERT INTO dim_dataset 
-                (dataset_hash, train_samples, valid_samples, test_samples) 
-                VALUES (:hash, :train_samples, :valid_samples, :test_samples) 
+                (dataset_hash, train_samples, valid_samples, test_samples, class_names) 
+                VALUES (:hash, :train_samples, :valid_samples, :test_samples, :class_names) 
                 RETURNING dataset_id
             """),
             {
                 "hash": param_hash,
                 "train_samples": params['train_samples'],
                 "valid_samples": params['valid_samples'],
-                "test_samples": params['test_samples']
+                "test_samples": params['test_samples'],
+                "class_names": json.dumps(params['class_names'])
             }
         )
         return result.fetchone()[0]
 
-    def save_training_results(self, results_df: pd.DataFrame) -> bool:
+    def save_training_results(self, results_df: pd.DataFrame, class_names_list: list) -> bool:
         """
         Save training results to star schema, populating dimension and fact tables.
 
@@ -283,7 +287,8 @@ class StarSchemaDB:
                     dataset_id = self._get_or_create_dataset_id({
                         'train_samples': row['train_samples'],
                         'valid_samples': row['valid_samples'],
-                        'test_samples': row['test_samples']
+                        'test_samples': row['test_samples'],
+                        'class_names': class_names_list
                     }, connection)
 
                     # Insert into fact table (with conflict handling)
@@ -317,14 +322,18 @@ class StarSchemaDB:
             print(f"Failed to save training results: {e}")
             return False
 
-    def get_best_models(self, test_accuracy_minimum: float = None,
-                       ftr_extract_time_limit: float = None,
-                       training_time_limit: float = None,
-                        num_models: float = None) -> pd.DataFrame:
+    def get_best_models(self, objective: str = 'multi:softprob',
+                          dataset_id: Optional[int] = None,  # Defaults to latest dataset
+                        test_accuracy_minimum: Optional[float] = None,
+                       ftr_extract_time_limit: Optional[float] = None,
+                       training_time_limit: Optional[float] = None,
+                        num_models: Optional[float] = None,) -> pd.DataFrame:
         """
         Retrieve models that meet specified performance criteria using star schema.
 
         Args:
+            objective (str): XGBoost objective to filter by (e.g. 'multi:softprob')
+            dataset_id (int): Dataset ID to filter by (default is latest dataset)
             test_accuracy_minimum (float): Minimum test accuracy
             ftr_extract_time_limit (float): Feature extraction time limit (seconds)
             training_time_limit (float): XGBoost training time limit (seconds)
@@ -362,9 +371,14 @@ class StarSchemaDB:
             JOIN dim_hyperparameters h ON f.hyperparameter_id = h.hyperparameter_id
             JOIN dim_preprocessing p ON f.preprocessing_id = p.preprocessing_id
             JOIN dim_dataset d ON f.dataset_id = d.dataset_id
-            WHERE h.objective = 'multi:softprob'
+            WHERE 1=1 
             """
-
+            if objective is not None:
+                query += f" AND f.objective = '{objective}'"
+            if dataset_id is not None:
+                query += f" AND f.dataset_id = {dataset_id}"
+            else:
+                query += f" AND f.dataset_id = (SELECT MAX(dataset_id) FROM dim_dataset)"  # Defaults to latest dataset
             if test_accuracy_minimum is not None:
                 query += f" AND f.test_accuracy >= {test_accuracy_minimum}"
             if ftr_extract_time_limit is not None:
