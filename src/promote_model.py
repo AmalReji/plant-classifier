@@ -92,10 +92,10 @@ else:
 
 # Step 4: Promote model along with hyperparameters and metadata
 train_dir = Path('../data/Plants_2/train')
-
+class_names = sorted([d.name for d in train_dir.iterdir() if d.is_dir()])
 metadata = {"version": version,
             "promoted_at": datetime.now(tz=timezone.utc).isoformat(),
-            "class_names": sorted([d.name for d in train_dir.iterdir() if d.is_dir()])}
+            "class_names": class_names}
 
 cleaned_model_params = {
     k: (v.isoformat() if isinstance(v, pd.Timestamp) else v)

@@ -13,6 +13,8 @@ from db_utils import StarSchemaDB
 
 def hyperparameter_tuning():
     """ Perform hyperparameter tuning for data preprocessing, feature extraction, and model training. """
+    train_dir = Path('../data/Plants_2/train')
+    class_names = sorted([d.name for d in train_dir.iterdir() if d.is_dir()])
 
     # Define parameter grid for data preprocessing
     preprocess_params = {
@@ -251,7 +253,7 @@ def hyperparameter_tuning():
     database_success = False
     if db.is_connected():
         # database_success = db.save_model_results(new_results_df)
-        database_success = db.save_training_results(new_results_df)
+        database_success = db.save_training_results(new_results_df, class_names_list=class_names)
         if database_success:
             print("Model training results successfully saved to the database.")
             stats = db.get_summary_stats()
