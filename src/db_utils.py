@@ -2,17 +2,15 @@
 Star Schema Database utility functions for model training results.
 This module implements a star schema with fact and dimension tables.
 """
+import hashlib
 import json
 import os
 from typing import Dict, Any, Optional
-import hashlib
 
 import pandas as pd
 from IPython.core.display_functions import display
 from dotenv import load_dotenv
-from pygments.lexers.objective import objective
 from sqlalchemy import create_engine, text
-from sqlalchemy.dialects.postgresql import insert
 
 
 class StarSchemaDB:
@@ -257,6 +255,7 @@ class StarSchemaDB:
 
         Args:
             results_df (DataFrame): DataFrame with columns matching the original flat schema
+            class_names_list (list): List of class names for the dataset
 
         Returns:
             bool: True if save was successful, False otherwise
@@ -323,10 +322,10 @@ class StarSchemaDB:
             return False
 
     def get_best_models(self, objective: str = 'multi:softprob',
-                          dataset_id: Optional[int] = None,  # Defaults to latest dataset
+                        dataset_id: Optional[int] = None,  # Defaults to latest dataset
                         test_accuracy_minimum: Optional[float] = None,
-                       ftr_extract_time_limit: Optional[float] = None,
-                       training_time_limit: Optional[float] = None,
+                        ftr_extract_time_limit: Optional[float] = None,
+                        training_time_limit: Optional[float] = None,
                         num_models: Optional[float] = None,) -> pd.DataFrame:
         """
         Retrieve models that meet specified performance criteria using star schema.
@@ -374,7 +373,7 @@ class StarSchemaDB:
             WHERE 1=1 
             """
             if objective is not None:
-                query += f" AND f.objective = '{objective}'"
+                query += f" AND h.objective = '{objective}'"
             if dataset_id is not None:
                 query += f" AND f.dataset_id = {dataset_id}"
             else:
