@@ -39,7 +39,7 @@ plant-classifier/
 ├── data/                       # Dataset (auto-downloaded, gitignored)
 ├── requirements.txt            # Python dependencies
 ├── main.py                     # Main application entry point (TBD)
-└── .env                        # DB credentials: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+└── .env                        # (create this yourself) DB credentials: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 ```
 
 ## Requirements
@@ -96,20 +96,29 @@ The project uses the [Plant Leaves for Image Classification](https://www.kaggle.
 
 **Note**: Due to size constraints, the dataset is not included in the repository and must be downloaded using the provided script.
 
-## Experiment Tracking (Coming Soon)
+## Experiment Tracking
 
-A PostgreSQL star schema database will be integrated to track:
+A PostgreSQL star schema database is used to track:
 - Training hyperparameters
 - Model performance metrics
 - Feature extraction configurations
 - Dataset versions and splits
 - Experiment timestamps and metadata
 
-This will enable:
+This enables:
 - Historical comparison of model iterations
 - Hyperparameter optimization tracking
 - Reproducible experiment management
 - Performance trend analysis
+
+Assign the following variables in a `.env` file, then run the following to execute the hyperparameter tuning pipeline and promote the best model to production:
+- `MODEL_DIR`: Folder where promoted model is to be saved
+- `MODEL_VERSION`: Version number for the promoted model (should be an integer e.g., 1)
+```bash
+cd src
+python hyperparameter_tuning.py  # Run hyperparameter tuning pipeline and log in DB
+python promote_model.py  # Promote best model to production 
+```
 
 ## Model Performance
 
@@ -117,17 +126,17 @@ The current pipeline extracts high-dimensional features from ResNet50's penultim
 
 ### Current Results
 
-| Dataset | Accuracy | 
-|---------|----------|
-| Validation | 76%   |  
-| Test | 75% | 
+| Dataset    | Accuracy | 
+|------------|----------|
+| Validation | 86.36%   |  
+| Test       | 90%      | 
 ## Future Enhancements
 
 - [x] Apply correct preprocessing depending on the chosen CNN
 - [x] Automated class balancing
-- [ ] PostgreSQL experiment tracking database
+- [x] PostgreSQL experiment tracking database
 - [ ] Web application for model deployment (`app/` directory)
-- [ ] Hyperparameter optimization pipeline
+- [x] Hyperparameter optimization pipeline
 - [ ] Model serving API
 - [ ] Docker containerization
 - [ ] CI/CD pipeline with automated testing

@@ -1,4 +1,5 @@
 import argparse
+from app.config import MODEL_VERSION
 from datetime import datetime, timezone
 import json
 import tempfile
@@ -12,15 +13,9 @@ import pandas as pd
 from db_utils import StarSchemaDB
 from train_model import train_xgboost
 
-# Handle the --version argument
-parser = argparse.ArgumentParser(description='Promote a specific model version to production.')
-parser.add_argument("--version", type=str, default=None, required=True, help="Version to promote.")
-args = parser.parse_args()
-version = args.version
+print(f"Promoting model version: {MODEL_VERSION}")
 
 db = StarSchemaDB()
-
-
 
 if db.is_connected():
     # Step 1: Find best model parameters from db
@@ -93,7 +88,7 @@ else:
 # Step 4: Promote model along with hyperparameters and metadata
 train_dir = Path('../data/Plants_2/train')
 class_names = sorted([d.name for d in train_dir.iterdir() if d.is_dir()])
-metadata = {"version": version,
+metadata = {"version": MODEL_VERSION,
             "promoted_at": datetime.now(tz=timezone.utc).isoformat(),
             "class_names": class_names}
 
@@ -103,8 +98,8 @@ cleaned_model_params = {
 }
 
 root_dir = Path.cwd().parent
-Path.joinpath(root_dir, f'app/models/model_v{version}').mkdir(parents=True, exist_ok=True)
-joblib.dump(xgb_model, f'../app/models/model_v{version}/model.joblib')
-json.dump(cleaned_model_params, open(f'../app/models/model_v{version}/model_hp.json', 'w'), indent=2)
-json.dump(metadata, open(f'../app/models/model_v{version}/metadata.json', 'w'), indent=2)
-print(f"Model saved to app/models/model_v{version}/")
+Path.joinpath(root_dir, f'app/models/model_v{MODEL_VERSION}').mkdir(parents=True, exist_ok=True)
+joblib.dump(xgb_model, f'../app/models/model_v{MODEL_VERSION}/model.joblib')
+json.dump(cleaned_model_params, open(f'../app/models/model_v{MODEL_VERSION}/model_hp.json', 'w'), indent=2)
+json.dump(metadata, open(f'../app/models/model_v{MODEL_VERSION}/metadata.json', 'w'), indent=2)
+print(f"Model saved to app/models/model_v{MODEL_VERSION}/")
