@@ -3,5 +3,5 @@ import os
 
 load_dotenv()
 
-MODEL_DIR = os.getenv("MODEL_PATH", "models")
+MODEL_DIR = os.getenv("MODEL_DIR", "models")
 MODEL_VERSION = int(os.getenv("MODEL_VERSION"))
