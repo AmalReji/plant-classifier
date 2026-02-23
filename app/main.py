@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.predict import single_image_prediction
+from predict import single_image_prediction
 from predict import load_model
 import json
 from config import MODEL_DIR, MODEL_VERSION
@@ -11,8 +11,10 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"],
                    allow_methods=["*"], allow_headers=["*"])
 
 # Load artifacts once at startup
-hyperparameters = json.load(f"{MODEL_DIR}/model_hp.json")
-metadata = json.load(f"{MODEL_DIR}/metadata.json")
+with open(f"{MODEL_DIR}/model_hp.json", 'r') as f:
+    hyperparameters = json.load(f)
+with open(f"{MODEL_DIR}/metadata.json", 'r') as f:
+    metadata = json.load(f)
 xgb_model = load_model()
 
 cnn_name = hyperparameters['model_name']
