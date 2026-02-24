@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from predict import single_image_prediction
+#from predict import single_image_prediction
 from predict import load_model
 import json
 from config import MODEL_DIR, MODEL_VERSION
@@ -27,8 +27,9 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
 
     contents = await file.read()
-    prediction_dict = single_image_prediction(image_bytes=contents,
-                                                                  cnn_name=cnn_name,
-                                                                  xgb_model=xgb_model,
-                                                                  class_names=CLASS_NAMES)
+    # prediction_dict = single_image_prediction(image_bytes=contents,
+    #                                                               cnn_name=cnn_name,
+    #                                                               xgb_model=xgb_model,
+    #                                                               class_names=CLASS_NAMES)
+    prediction_dict = {"test": "server is running"}
     return prediction_dict

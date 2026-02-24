@@ -1,16 +1,16 @@
 import io
-
 import numpy as np
-import torch
+#import torch
 from PIL import Image
-from torchvision.models import get_weight, get_model
-
+#from torchvision.models import get_weight, get_model
+import xgboost as xgb
 from config import MODEL_DIR
-import joblib
 
 def load_model():
     try:
-        model = joblib.load(f"{MODEL_DIR}/model.joblib")
+        model = xgb.XGBClassifier()
+        model.load_model(f"{MODEL_DIR}/model.json")
+        # model = joblib.load(f"{MODEL_DIR}/model.joblib")
         print(f"Model loaded successfully from {MODEL_DIR}")
         return model
     except Exception as e:
