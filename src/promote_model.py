@@ -99,7 +99,8 @@ cleaned_model_params = {
 
 root_dir = Path.cwd().parent
 Path.joinpath(root_dir, f'app/models/model_v{MODEL_VERSION}').mkdir(parents=True, exist_ok=True)
-joblib.dump(xgb_model, f'../app/models/model_v{MODEL_VERSION}/model.joblib')
+# joblib.dump(xgb_model, f'../app/models/model_v{MODEL_VERSION}/model.joblib')
+xgb_model.save_model(f"../app/models/model_v{MODEL_VERSION}/model.json")
 json.dump(cleaned_model_params, open(f'../app/models/model_v{MODEL_VERSION}/model_hp.json', 'w'), indent=2)
 json.dump(metadata, open(f'../app/models/model_v{MODEL_VERSION}/metadata.json', 'w'), indent=2)
 print(f"Model saved to app/models/model_v{MODEL_VERSION}/")
