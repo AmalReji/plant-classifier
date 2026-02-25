@@ -1,53 +1,69 @@
 import io
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
 import numpy as np
-#import torch
 from PIL import Image
-#from torchvision.models import get_weight, get_model
 import xgboost as xgb
 from config import MODEL_DIR
+
 
 def load_model():
     try:
         model = xgb.XGBClassifier()
         model.load_model(f"{MODEL_DIR}/model.json")
-        # model = joblib.load(f"{MODEL_DIR}/model.joblib")
         print(f"Model loaded successfully from {MODEL_DIR}")
         return model
     except Exception as e:
         print(f"Error loading model: {e}")
         return None
 
+
 def single_feature_extraction(image: Image.Image, cnn_name: str) -> np.ndarray:
-    weights = get_weight(f"{cnn_name}_Weights.DEFAULT")
-    preprocess = weights.transforms()
+    script_path = Path(__file__).resolve().parent / 'torch_feature_subprocess.py'
+    python_executable = sys.executable
 
-    cnn = get_model(cnn_name, weights="DEFAULT")
-    cnn = torch.nn.Sequential(*list(cnn.children())[:-1])
-    cnn.eval()
+    # Save the in-memory image to a temporary file so the subprocess can read it.
+    # NamedTemporaryFile gives us a unique path (`temp_image_file.name`) that exists
+    # only for the lifetime of this context manager.
+    with tempfile.NamedTemporaryFile(suffix='.png') as temp_image_file:
+        image.save(temp_image_file.name, format='PNG')
+        cmd = [
+            # Use the same Python interpreter running the API process so the
+            # subprocess sees the same virtualenv/site-packages.
+            python_executable,
+            str(script_path),
+            '--image-path',
+            temp_image_file.name,
+            '--cnn-name',
+            cnn_name
+        ]
 
-    # Model specific preprocessing
-    tensor = preprocess(image).unsqueeze(0)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
-    with torch.no_grad():
-        features = cnn(tensor)
-        features = features.view(features.size(0), -1)  # Flatten (1, 2048, 1, 1) -> (1, 2048)
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Feature extraction subprocess failed with code {result.returncode}: {result.stderr.strip()}"
+        )
 
-    return features.numpy()
+    payload = json.loads(result.stdout)
+    return np.array(payload['features'], dtype=np.float32)
+
 
 def single_image_prediction(image_bytes, cnn_name: str, xgb_model, class_names: list) -> int:
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
     features = single_feature_extraction(image, cnn_name)
 
-    prediction = xgb_model.predict(features)
     pred_idx = int(xgb_model.predict(features)[0])
     confidence = float(xgb_model.predict_proba(features)[0][pred_idx])
 
     label = class_names[pred_idx] if class_names else str(pred_idx)
 
     return {
-        "prediction": label,
-        "class_index": pred_idx,
-        "confidence": round(confidence, 4)
+        'prediction': label,
+        'class_index': pred_idx,
+        'confidence': round(confidence, 4),
     }
-
-
