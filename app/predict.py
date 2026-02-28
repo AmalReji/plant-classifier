@@ -62,8 +62,4 @@ def single_image_prediction(image_bytes, cnn_name: str, xgb_model, class_names: 
 
     label = class_names[pred_idx] if class_names else str(pred_idx)
 
-    return {
-        'prediction': label,
-        'class_index': pred_idx,
-        'confidence': round(confidence, 4),
-    }
+    return label, pred_idx, round(confidence, 4)
