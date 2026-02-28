@@ -20,7 +20,7 @@ def main():
     preprocess = weights.transforms()
 
     cnn = get_model(args.cnn_name, weights='DEFAULT')
-    cnn = torch.nn.Sequential(*list(cnn.children())[:-1])
+    cnn = torch.nn.Sequential(*list(cnn.children())[:-1])  # Flatten (1, 2048, 1, 1) -> (1, 2048)
     cnn.eval()
 
     tensor = preprocess(image).unsqueeze(0)
