@@ -1,0 +1,2 @@
+# Models - ignore ALL model version folders at first
+app/models/model_v*/
