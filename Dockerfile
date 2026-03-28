@@ -8,16 +8,11 @@ ENV MODEL_VERSION=1
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies if required
-#RUN apt-get update && apt-get install -y \
-
-# Inference-only dependencies (lighter thn full requirements.txt)
-COPY app/requirements_inference.txt .
-RUN pip install --no-cache-dir -r requirements_inference.txt
-
-# Copy the application code and selected model files using MODEL_VERSION
+# Copy the application code into the container
 COPY app/ /app/
-# Even though we have a .dockerignore, we explicitly copy the model files to ensure they are included in the image
+# Install inference-only dependencies (lighter than full requirements.txt)
+RUN pip install --no-cache-dir -r requirements_inference.txt
+# Even though app/models is in .dockerignore, we can explicitly copy the chosen model's files
 COPY app/models/model_v${MODEL_VERSION}/ /app/models/model_v${MODEL_VERSION}/
 
 # Expose the port that the FastAPI app will run on, 7860 is commonly used for Hugging Face Spaces
