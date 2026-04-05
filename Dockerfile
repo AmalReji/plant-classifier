@@ -2,9 +2,11 @@
 FROM python:3.12-slim
 LABEL authors="amalreji"
 
-# Runtime environment variable (available to your Python code)
-ENV MODEL_VERSION=1
-# ENV MODEL_VERSION=${MODEL_VERSION}
+# Build argument (can be overridden at build time)
+ARG MODEL_VERSION=1
+
+# Runtime environment variable (available to Python code)
+ENV MODEL_VERSION=${MODEL_VERSION}
 ENV MODEL_DIR=/app/models/model_v${MODEL_VERSION}
 
 # Set the working directory in the container
@@ -17,11 +19,11 @@ RUN pip install --no-cache-dir -r requirements_inference.txt
 # 2. Copy ALL application code (including ALL model versions for now)
 COPY app/ /app/
 
-# 3. Remove ALL model version folders except the one we actually want
+# 3. Remove ALL model version folders and recreate the one we actually want
 RUN rm -rf /app/models/model_v* && \
     mkdir -p ${MODEL_DIR}
 
-# 4. Copy ONLY the chosen model version (this now works because we didn't ignore it)
+# 4. Copy ONLY the chosen model version into the container
 COPY app/models/model_v${MODEL_VERSION}/ ${MODEL_DIR}/
 
 # Expose the port that the FastAPI app will run on, 7860 is commonly used for Hugging Face Spaces
