@@ -8,6 +8,8 @@ pinned: false
 license: mit
 short_description: Classify plant leaves on plant name and healthy vs diseased.
 ---
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+
 # Plant Classifier
 
 Classify healthy vs unhealthy leaves using ML.
