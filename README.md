@@ -1,3 +1,13 @@
+---
+title: Plant Classifier
+emoji: 🐨
+colorFrom: red
+colorTo: yellow
+sdk: docker
+pinned: false
+license: mit
+short_description: Classify plant leaves on plant name and healthy vs diseased.
+---
 # Plant Classifier
 
 Classify healthy vs unhealthy leaves using ML.
