@@ -9,3 +9,4 @@ numpy==1.26.4
 python-dotenv==1.1.1
 uvicorn==0.41.0
 python-multipart==0.0.22
+gradio==6.11.0

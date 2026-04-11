@@ -5,6 +5,7 @@ import json
 from config import MODEL_DIR
 import logging, time, uuid
 from datetime import datetime, timezone
+import gradio as gr
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')  # Raw JSON to standard output
 logger = logging.getLogger(__name__)
@@ -23,6 +24,27 @@ xgb_model = load_model()
 
 cnn_name = hyperparameters['model_name']
 CLASS_NAMES = metadata['class_names']
+
+def gradio_predict(image):
+    if image is None:
+        return "Please upload an image"
+
+    with open(image, 'rb') as file:
+        contents = file.read()
+
+    label, pred_idx, confidence = single_image_prediction(image_bytes=contents, cnn_name=cnn_name,
+                                                          xgb_model=xgb_model, class_names=CLASS_NAMES)
+
+    return f"Predicted: {label}, confidence: {confidence:.2f}"
+
+gradio_app = gr.Interface(
+                fn=gradio_predict,
+                inputs=gr.Image(type="filepath"),
+                outputs="text",
+                title="Plant Classifier",
+                description="Upload a plant image to classify it")
+
+app = gr.mount_gradio_app(app, gradio_app, path='/')
 
 
 @app.post('/predict')
