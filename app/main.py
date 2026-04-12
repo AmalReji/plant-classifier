@@ -44,7 +44,7 @@ gradio_app = gr.Interface(
                 title="Plant Classifier",
                 description="Upload a plant image to classify it")
 
-app = gr.mount_gradio_app(app, gradio_app, path='/')
+app = gr.mount_gradio_app(app, gradio_app, path='/ui')
 
 
 @app.post('/predict')
