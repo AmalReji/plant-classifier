@@ -1,6 +1,6 @@
 ---
 title: Plant Classifier
-emoji: 🐨
+emoji: 🌱
 colorFrom: red
 colorTo: yellow
 sdk: docker
@@ -35,7 +35,8 @@ The project uses a hybrid approach:
 - **Feature Extraction**: Pre-trained ResNet50 model (without final classification layer)
 - **Data Pipeline**: PyTorch DataLoaders with class balancing via WeightedRandomSampler
 - **Classification**: XGBoost classifier trained on extracted features
-- **Database**: PostgreSQL star schema for training experiment tracking (coming soon)
+- **Database**: PostgreSQL star schema for training experiment tracking
+- **Deployment**: HF Spaces web application for model inference
 
 ## Project Structure
 
@@ -84,23 +85,24 @@ plant-classifier/
 
 ### Training the Model (~80 mins on CPU)
 
+Modify _params dictionaries in `hyperparameter_tuning.py` to set the hyperparameter space for feature extraction and model training. Then run:
 ```bash
 cd src
-python extract_features.py
-python train_model.py
+python hyperparameter_tuning.py
 ```
 
 This will:
 1. Load and preprocess images from `data/Plants_2/train`, `valid`, and `test` directories
-2. Extract features using pre-trained CNN (currently ResNet50)
+2. Extract features using a pre-trained CNN
 3. Train an XGBoost classifier on the extracted features
 4. Evaluate performance on the test set
+5. Upload the results and model metadata to the PostgreSQL database for experiment tracking
 
 ### Key Features
 
 - **Class Balancing**: Uses WeightedRandomSampler to handle imbalanced datasets
 - **Transfer Learning**: Leverages ResNet50 pre-trained on ImageNet for feature extraction
-- **Model Flexibility**: Easy to swap different pre-trained models via `model_name` parameter
+- **Model Flexibility**: Easy to swap different pre-trained CNNs via `model_name` parameter
 
 ## Dataset
 
@@ -147,10 +149,10 @@ The current pipeline extracts high-dimensional features from ResNet50's penultim
 - [x] Apply correct preprocessing depending on the chosen CNN
 - [x] Automated class balancing
 - [x] PostgreSQL experiment tracking database
-- [ ] Web application for model deployment (`app/` directory)
 - [x] Hyperparameter optimization pipeline
-- [ ] Model serving API
-- [ ] Docker containerization
+- [x] Model serving API
+- [x] Docker containerization
+- [x] Web application for model deployment (`app/` directory)
 - [ ] CI/CD pipeline with automated testing
 
 ## Contributing
