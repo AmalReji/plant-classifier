@@ -1,0 +1,49 @@
+name: Deploy to HF Spaces
+
+# Run condition for the GitHub Action: on push to the main branch or when manually triggered
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allows us to run the Action manually
+
+# Define the GitHub Action workflow
+jobs:
+  sync:
+    # Set the environment for the job to run on
+    runs-on: ubuntu-latest
+    steps:
+      # Clone the repo into the environment
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      ## Continuous Integration (CI)
+
+      # 1) Add basic linting
+      - name: Lint code
+        run: |
+          pip install ruff
+          ruff check .
+
+      # 2) Add a minimal unit test file, then run pytest
+      - name: Run tests
+        run: |
+          pip install pytest
+          pytest tests/  # Automatically discovers and runs tests in the repository
+
+      # 3) Build the Docker image to check if it errors
+      - name: Build Docker image
+        run: docker build -t plant-classifier
+
+      ## Continuous Deployment (CD)
+
+      # Sync the code to Hugging Face Spaces
+      - name: Sync to HF Spaces
+        uses: huggingface/hub-sync@v0.1.0
+        with:
+          github_repo_id: ${{ github.repository }}  # Automatically uses the current repository
+          huggingface_repo_id: amalreji/plant-classifier
+          hf_token: ${{ secrets.HF_TOKEN }}  # Automatically uses the HF token stored in GitHub secrets
+
+          repo_type: 'space'
+          space_sdk: 'docker'
