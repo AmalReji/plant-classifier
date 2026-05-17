@@ -38,7 +38,7 @@ jobs:
 
       # 3) Build the Docker image to check if it errors
       - name: Build Docker image
-        run: docker build -t plant-classifier
+        run: docker build --build-arg MODEL_VERSION=1 -t plant-classifier-app .
 
       ## Continuous Deployment (CD)
 
