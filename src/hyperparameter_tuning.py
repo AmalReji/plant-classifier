@@ -233,7 +233,7 @@ def hyperparameter_tuning():
 
     # Save overall results
     print(f"\n{'=' * 60}")
-    print(f"HYPERPARAMETER TUNING COMPLETE")
+    print("HYPERPARAMETER TUNING COMPLETE")
     print(f"{'=' * 60}")
     print(f"Best parameters: {best_params}")
     print(f"Best test accuracy: {best_accuracy:.4f}")

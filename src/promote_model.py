@@ -1,4 +1,3 @@
-import argparse
 from app.config import MODEL_VERSION
 from datetime import datetime, timezone
 import json
@@ -6,7 +5,6 @@ import tempfile
 import time
 from pathlib import Path
 import subprocess
-import joblib
 import numpy as np
 import pandas as pd
 

@@ -314,7 +314,7 @@ class StarSchemaDB:
                     )
 
                 connection.commit()
-                print(f"Training results saved to star schema (duplicates ignored).")
+                print("Training results saved to star schema (duplicates ignored).")
                 return True
 
         except Exception as e:
@@ -377,7 +377,7 @@ class StarSchemaDB:
             if dataset_id is not None:
                 query += f" AND f.dataset_id = {dataset_id}"
             else:
-                query += f" AND f.dataset_id = (SELECT MAX(dataset_id) FROM dim_dataset)"  # Defaults to latest dataset
+                query += " AND f.dataset_id = (SELECT MAX(dataset_id) FROM dim_dataset)"  # Defaults to latest dataset
             if test_accuracy_minimum is not None:
                 query += f" AND f.test_accuracy >= {test_accuracy_minimum}"
             if ftr_extract_time_limit is not None:

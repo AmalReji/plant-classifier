@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from predict import load_model, single_image_prediction
 import json
 from config import MODEL_DIR
-import logging, time, uuid
+import logging
+import time
+import uuid
 from datetime import datetime, timezone
 import gradio as gr
 

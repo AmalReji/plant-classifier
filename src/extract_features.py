@@ -48,7 +48,7 @@ if __name__ == "__main__":
     test_dir = Path.joinpath(data_path, "test")
 
     # Read hyperparameters from JSON
-    hyperparameters_file = Path(f"model_hyperparameters.json")
+    hyperparameters_file = Path("model_hyperparameters.json")
     if hyperparameters_file.exists():
         with open(hyperparameters_file, 'r') as f:
             hyperparameters = json.load(f)

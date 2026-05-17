@@ -5,11 +5,9 @@ from pathlib import Path
 import pandas as pd
 import xgboost as xgb
 import numpy as np
-import sys
 
-from sklearn.decomposition import PCA
 from sklearn.metrics import classification_report, accuracy_score
-#from db_utils import StarSchemaDB
+from db_utils import StarSchemaDB
 
 
 def train_xgboost(train_X, train_y, objective='multi:softprob', num_class=None, eval_metric='mlogloss', n_jobs=1,
@@ -69,7 +67,7 @@ if __name__ == '__main__':
     test_y = np.load('test_y.npy')
 
     # Read hyperparameters from JSON
-    hyperparameters_file = Path(f"model_hyperparameters.json")
+    hyperparameters_file = Path("model_hyperparameters.json")
     if hyperparameters_file.exists():
         with open(hyperparameters_file, 'r') as f:
             hyperparameters = json.load(f)
@@ -123,7 +121,7 @@ if __name__ == '__main__':
         )
 
     # Upload results to database
-    db = ModelResultsDB()
+    db = StarSchemaDB()
     database_success = False
     if db.is_connected():
         database_success = db.save_model_results(new_results_df)

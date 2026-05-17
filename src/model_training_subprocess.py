@@ -1,6 +1,5 @@
 import argparse
 import json
-from pathlib import Path
 import numpy as np
 from sklearn.metrics import accuracy_score
 from train_model import train_xgboost
@@ -16,8 +15,6 @@ def main():
     parser.add_argument('--param_id', type=str, required=True, help='Parameter set ID for tracking.')
 
     args = parser.parse_args()
-
-    input_dir = Path.cwd()
 
     print(f"Training XGBoost model with parameters: {args}")
 
