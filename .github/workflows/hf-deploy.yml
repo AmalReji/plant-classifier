@@ -22,9 +22,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Load model config
-        run: |
-          cat model_version.env >> $GITHUB_ENV  # Export variables from model_version.env to the GitHub Actions environment
+#      - name: Load model config
+#        run: |
+#          cat model_version.env >> $GITHUB_ENV  # Export variables from model_version.env to the GitHub Actions environment
 
       ## Continuous Integration (CI)
 
@@ -42,7 +42,8 @@ jobs:
 
       # 3) Build the Docker image to check if it errors
       - name: Build Docker image
-        run: docker build --build-arg MODEL_VERSION=${{env.MODEL_VERSION}} -t plant-classifier-app .
+        run: docker build -t plant-classifier-app .
+        # run: docker build --build-arg MODEL_VERSION=${{env.MODEL_VERSION}} -t plant-classifier-app .
 
       ## Continuous Deployment (CD)
 
