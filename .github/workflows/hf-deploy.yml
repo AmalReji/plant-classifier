@@ -1,6 +1,6 @@
 name: Deploy to HF Spaces
 
-# Run condition for the GitHub Action: on push to the main branch or when manually triggered
+# Run conditions for the GitHub Action
 on:
   push:
     branches:
@@ -22,10 +22,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-#      - name: Load model config
-#        run: |
-#          cat model_version.env >> $GITHUB_ENV  # Export variables from model_version.env to the GitHub Actions environment
-
       ## Continuous Integration (CI)
 
       # 1) Add basic linting
@@ -34,7 +30,7 @@ jobs:
           pip install ruff
           ruff check .
 
-      # 2) Add a minimal unit test file, then run pytest
+      # 2) Run tests outlined in test_model.py using pytest
       - name: Run tests
         run: |
           pip install pytest
@@ -43,7 +39,6 @@ jobs:
       # 3) Build the Docker image to check if it errors
       - name: Build Docker image
         run: docker build -t plant-classifier-app .
-        # run: docker build --build-arg MODEL_VERSION=${{env.MODEL_VERSION}} -t plant-classifier-app .
 
       ## Continuous Deployment (CD)
 
