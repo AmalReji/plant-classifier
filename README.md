@@ -153,7 +153,7 @@ The current pipeline extracts high-dimensional features from ResNet50's penultim
 - [x] Model serving API
 - [x] Docker containerization
 - [x] Web application for model deployment (`app/` directory)
-- [ ] CI/CD pipeline with automated testing
+- [x] CI/CD pipeline with automated testing
 
 ## Contributing
 
