@@ -26,9 +26,12 @@ splits = ["train", "test", "validation", "valid"]
 
 def normalize_split(name: str) -> str:
     name = name.lower()
-    if "train" in name: return "train"
-    if "valid" in name: return "valid"
-    if "test" in name: return "test"
+    if "train" in name:
+        return "train"
+    if "valid" in name:
+        return "valid"
+    if "test" in name:
+        return "test"
     return "train" # fallback
 
 for img_path in path_jack.rglob("*.jpg"):
