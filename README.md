@@ -18,7 +18,7 @@ Classify healthy vs unhealthy leaves using ML.
 
 Due to size constraints, the dataset is not uploaded to GitHub.
 
-To download the dataset, run:
+To download the combined dataset, clone the repo and run:
 
 ```bash
 cd src
