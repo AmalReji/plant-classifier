@@ -372,6 +372,8 @@ class StarSchemaDB:
             JOIN dim_dataset d ON f.dataset_id = d.dataset_id
             WHERE 1=1 
             """
+            query += " AND p.sampling_method <> 'none'"
+
             if objective is not None:
                 query += f" AND h.objective = '{objective}'"
             if dataset_id is not None:

@@ -1,0 +1,19 @@
+{
+  "result_id": 286,
+  "param_id": "20260528_092325_iter_65",
+  "model_name": "EfficientNet_B0",
+  "objective": "multi:softprob",
+  "eval_metric": "mlogloss",
+  "n_estimators": 100,
+  "max_depth": 5,
+  "sampling_method": "under",
+  "batch_size": 128,
+  "num_workers": 0,
+  "train_samples": 17484,
+  "valid_samples": 12518,
+  "test_samples": 12518,
+  "test_accuracy": 0.9889758747403739,
+  "valid_accuracy": 0.9912925387442083,
+  "training_time": 356.89901208877563,
+  "created_at": "2026-05-30T23:48:29.450189"
+}

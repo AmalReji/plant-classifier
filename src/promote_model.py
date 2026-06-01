@@ -1,15 +1,28 @@
-from app.config import MODEL_VERSION
+import os
 from datetime import datetime, timezone
 import json
 import tempfile
 import time
-from pathlib import Path
 import subprocess
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
+from dotenv import load_dotenv
 from db_utils import StarSchemaDB
 from train_model import train_xgboost
+
+load_dotenv(f"{Path.cwd().parent}/model_version.env", override=False)  # loads variables from model_version.env
+MODEL_VERSION = int(os.getenv("MODEL_VERSION"))
+
+if MODEL_VERSION is None:
+    raise ValueError("MODEL_VERSION must be set in model_version.env")
+if not isinstance(MODEL_VERSION, int):
+    raise TypeError("MODEL_VERSION must be an integer")
+if MODEL_VERSION <= 0:
+    raise ValueError("MODEL_VERSION must be a positive integer")
+if Path(f'../app/models/model_v{MODEL_VERSION}').exists():
+    raise AssertionError(f"Model directory for version {MODEL_VERSION} already exists. Increment MODEL_VERSION to avoid overwriting existing models.")
 
 print(f"Promoting model version: {MODEL_VERSION}")
 
