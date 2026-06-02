@@ -11,17 +11,16 @@ RUN pip install --no-cache-dir --timeout 1200 -r requirements_inference.txt
 
 # 2. Copy model_version.env and set MODEL_VERSION variable
 COPY model_version.env .
-ENV $(cat model_version.env | xargs)
 
 # 3. Copy ALL application code (including ALL model versions for now)
 COPY app/ /app/
 
-# 4. Parse MODEL_VERSION from file, delete every other model version
+# 4. Parse MODEL_VERSION from file, delete every other model version, persist MODEL_VERSION and MODEL_DIR into ENV
 RUN MODEL_VERSION=$(grep '^MODEL_VERSION=' model_version.env | cut -d= -f2 | tr -d '[:space:]') && \
     echo "Parsed MODEL_VERSION: $MODEL_VERSION" && \
-    find /app/models -maxdepth 1 -name 'model_v*' -not -name "model_v${MODEL_VERSION}" -exec rm -rf {} +
-
-ENV MODEL_DIR=/app/models/model_v${MODEL_VERSION}
+    find /app/models -maxdepth 1 -name 'model_v*' -not -name "model_v${MODEL_VERSION}" -exec rm -rf {} + \
+    echo "MODEL_VERSION=$MODEL_VERSION" > /etc/environment && \
+    echo "MODEL_DIR=/app/models/model_v${MODEL_VERSION}" >> /etc/environment
 
 # FOR BUG FIXING
 RUN echo "MODEL_VERSION=$MODEL_VERSION" && \
@@ -31,4 +30,5 @@ RUN echo "MODEL_VERSION=$MODEL_VERSION" && \
 # Expose the port that the FastAPI app will run on, 7860 is commonly used for Hugging Face Spaces
 EXPOSE 7860
 # Command to run the FastAPI app using Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["/bin/sh", "-c", "export $(cat /etc/environment | xargs) && uvicorn main:app --host 0.0.0.0 --port 7860"]
