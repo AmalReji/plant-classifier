@@ -21,6 +21,7 @@ RUN MODEL_VERSION=$(grep '^MODEL_VERSION=' model_version.env | cut -d= -f2 | tr 
     find /app/models -maxdepth 1 -name 'model_v*' -not -name "model_v${MODEL_VERSION}" -exec rm -rf {} +
 
 ENV MODEL_VERSION=${MODEL_VERSION}
+ENV MODEL_DIR='/app/models/model_v${MODEL_VERSION}'
 
 # Expose the port that the FastAPI app will run on, 7860 is commonly used for Hugging Face Spaces
 EXPOSE 7860
