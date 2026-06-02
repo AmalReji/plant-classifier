@@ -9,8 +9,9 @@ WORKDIR /app
 COPY app/requirements_inference.txt .
 RUN pip install --no-cache-dir --timeout 1200 -r requirements_inference.txt
 
-# 2. Copy model_version.env to set MODEL_VERSION variable
+# 2. Copy model_version.env and set MODEL_VERSION variable
 COPY model_version.env .
+ENV $(cat model_version.env | xargs)
 
 # 3. Copy ALL application code (including ALL model versions for now)
 COPY app/ /app/
@@ -20,8 +21,7 @@ RUN MODEL_VERSION=$(grep '^MODEL_VERSION=' model_version.env | cut -d= -f2 | tr 
     echo "Parsed MODEL_VERSION: $MODEL_VERSION" && \
     find /app/models -maxdepth 1 -name 'model_v*' -not -name "model_v${MODEL_VERSION}" -exec rm -rf {} +
 
-ENV MODEL_VERSION=${MODEL_VERSION}
-ENV MODEL_DIR='/app/models/model_v${MODEL_VERSION}'
+ENV MODEL_DIR=/app/models/model_v${MODEL_VERSION}
 
 # Expose the port that the FastAPI app will run on, 7860 is commonly used for Hugging Face Spaces
 EXPOSE 7860
