@@ -18,7 +18,7 @@ COPY app/ /app/
 # 4. Parse MODEL_VERSION from file, delete every other model version, persist MODEL_VERSION and MODEL_DIR into ENV
 RUN MODEL_VERSION=$(grep '^MODEL_VERSION=' model_version.env | cut -d= -f2 | tr -d '[:space:]') && \
     echo "Parsed MODEL_VERSION: $MODEL_VERSION" && \
-    find /app/models -maxdepth 1 -name 'model_v*' -not -name "model_v${MODEL_VERSION}" -exec rm -rf {} + \
+    find /app/models -maxdepth 1 -name 'model_v*' -not -name "model_v${MODEL_VERSION}" -exec rm -rf {} + &&\
     echo "MODEL_VERSION=$MODEL_VERSION" > /etc/environment && \
     echo "MODEL_DIR=/app/models/model_v${MODEL_VERSION}" >> /etc/environment
 
