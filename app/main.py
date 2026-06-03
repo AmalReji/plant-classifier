@@ -27,7 +27,13 @@ xgb_model = load_model()
 cnn_name = hyperparameters['model_name']
 CLASS_NAMES = metadata['class_names']
 
+# Clean CLASS_NAMES by removing bracketed values and converting scientific names to lay names
+CLASS_NAMES = [class_name.split('(')[0].strip() if '(' in class_name and ')' in class_name else class_name for class_name in CLASS_NAMES]
+CLASS_NAMES = [class_name.replace("Alstonia Scholaris", "Blackboard Tree") for class_name in CLASS_NAMES]
+CLASS_NAMES = [class_name.replace("Pongamia Pinnata", "Indian Beech") for class_name in CLASS_NAMES]
+
 def gradio_predict(image):
+    """ Prediction function for gradio at the root endpoint """
     if image is None:
         return "Please upload an image"
 
@@ -51,6 +57,7 @@ app = gr.mount_gradio_app(app, gradio_app, path='/')
 
 @app.post('/predict')
 async def predict(file: UploadFile = File(...)):
+    """ Prediction function for FastAPI at the /predict endpoint """""
     request_id = str(uuid.uuid4())[:8]  # Short unique ID for logging
     start_time = time.time()
 
