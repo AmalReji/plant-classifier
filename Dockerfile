@@ -22,13 +22,8 @@ RUN MODEL_VERSION=$(grep '^MODEL_VERSION=' model_version.env | cut -d= -f2 | tr 
     echo "MODEL_VERSION=$MODEL_VERSION" > /etc/environment && \
     echo "MODEL_DIR=/app/models/model_v${MODEL_VERSION}" >> /etc/environment
 
-# FOR BUG FIXING
-RUN echo "MODEL_VERSION=$MODEL_VERSION" && \
-    echo "MODEL_DIR=$MODEL_DIR" && \
-    ls -R /app/models
-
 # Expose the port that the FastAPI app will run on, 7860 is commonly used for Hugging Face Spaces
 EXPOSE 7860
+
 # Command to run the FastAPI app using Uvicorn
-#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
 CMD ["/bin/sh", "-c", "export $(cat /etc/environment | xargs) && uvicorn main:app --host 0.0.0.0 --port 7860"]
