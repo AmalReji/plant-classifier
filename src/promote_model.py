@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 from db_utils import StarSchemaDB
 from train_model import train_xgboost
 
-load_dotenv(f"{Path.cwd().parent}/model_version.env", override=False)  # loads variables from model_version.env
+load_dotenv(f"{Path.cwd().parent}/model_version.env", override=False)  # loads variables from model_version.env ONLY if they are not already set in the environment (e.g. by Docker)
 MODEL_VERSION = int(os.getenv("MODEL_VERSION"))
 
 if MODEL_VERSION is None:
