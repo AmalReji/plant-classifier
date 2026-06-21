@@ -14,6 +14,8 @@ Check out the configuration reference at https://huggingface.co/docs/hub/spaces-
 
 A machine learning pipeline for classifying healthy vs unhealthy plant leaves using transfer learning with CNN feature extraction and XGBoost classification.
 
+Link to app: https://huggingface.co/spaces/amalreji/plant-classifier
+
 ## Architecture
 
 The project uses a hybrid approach:
@@ -134,7 +136,7 @@ The Dockerfile reads the chosen model from `model_version.env` and copies it int
 
 The Dockerfile is deployed to a Hugging Face Spaces web application upon successful push to this GitHub repo's main branch. The app allows users to upload leaf images and receive predictions on plant health status.
 
-Link to app: https://huggingface.co/spaces/your-username/plant-classifier
+Link to app: https://huggingface.co/spaces/amalreji/plant-classifier
 
 
 ## Experiment Tracking
